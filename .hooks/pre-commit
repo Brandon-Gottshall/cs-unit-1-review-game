@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# PRE-COMMIT HOOK: Mandatory regression verification
+#
+# Prevents commits that break:
+# 1. Chevrotain parser initialization (grammar ambiguities)
+# 2. Java pattern parse correctness for Ch 1-2 constructs
+# 3. Question pool data integrity (required fields, valid types, unique IDs)
+# 4. Concept tree DAG validity (no cycles, no orphan prereqs)
+# 5. Module export contracts (all consumer imports resolve)
+#
+# Install: npm run hooks:install
+# Bypass (emergency only): git commit --no-verify
+
+echo "🔒 Running regression verification..."
+echo ""
+
+cd "$(git rev-parse --show-toplevel)"
+npx vitest run --reporter=dot 2>&1
+
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo ""
+  echo "❌ REGRESSION TESTS FAILED — commit blocked."
+  echo ""
+  echo "   Run 'npm run verify' for verbose output."
+  echo "   Fix failing tests before committing."
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "✅ All regression tests passed."
+exit 0
