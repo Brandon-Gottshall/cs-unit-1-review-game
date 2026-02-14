@@ -1,0 +1,687 @@
+From 79d1e045a5450de9f05ec9e92203e57d82f370f8 Mon Sep 17 00:00:00 2001
+From: Brandon Gottshall <blgottshall@gmail.com>
+Date: Sat, 14 Feb 2026 02:59:40 +0000
+Subject: [PATCH] Add write_program question type for full Java program
+ challenges
+
+Students write complete Java programs from memory with class/filename
+matching, main method boilerplate, and structure validation. Includes
+5 questions (HelloWorld, AreaCalculator, SwapValues, TempConverter,
+MathDemo) and progressive hint system.
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+---
+ __tests__/data-integrity.regression.test.ts   |   1 +
+ app/quiz/quiz-client.tsx                      |  14 +-
+ components/interactive/index.tsx              |   1 +
+ .../interactive/write-program-challenge.tsx   | 325 ++++++++++++++++++
+ lib/cs-game-data.ts                           | 228 +++++++++++-
+ 5 files changed, 567 insertions(+), 2 deletions(-)
+ create mode 100644 components/interactive/write-program-challenge.tsx
+
+diff --git a/__tests__/data-integrity.regression.test.ts b/__tests__/data-integrity.regression.test.ts
+index 4be3de2..41f6363 100644
+--- a/__tests__/data-integrity.regression.test.ts
++++ b/__tests__/data-integrity.regression.test.ts
+@@ -31,6 +31,7 @@ const VALID_TYPES: CSQuestionType[] = [
+   'valid_invalid',
+   'match_definition',
+   'code_analysis',
++  'write_program',
+ ];
+ 
+ // ─── Question Pool Integrity ─────────────────────────────────
+diff --git a/app/quiz/quiz-client.tsx b/app/quiz/quiz-client.tsx
+index d06a543..2e0933a 100644
+--- a/app/quiz/quiz-client.tsx
++++ b/app/quiz/quiz-client.tsx
+@@ -21,7 +21,7 @@ import {
+   type CSQuestionType,
+   shuffleArray,
+ } from "@/lib/cs-game-data";
+-import { JavaCodeEditor, VariableTraceViz, CodeOutputComparison } from "@/components/interactive";
++import { JavaCodeEditor, VariableTraceViz, CodeOutputComparison, WriteProgramChallenge } from "@/components/interactive";
+ import { highlightLines } from "@/lib/java-syntax-highlight";
+ import {
+   getSession,
+@@ -61,6 +61,7 @@ const typeInfo: Record<CSQuestionType, { label: string; icon: React.ReactNode; c
+   valid_invalid: { label: "Valid?", icon: <HelpCircle className="w-4 h-4" />, color: "bg-orange-500/20 text-orange-400" },
+   match_definition: { label: "Match", icon: <BookOpen className="w-4 h-4" />, color: "bg-emerald-500/20 text-emerald-400" },
+   code_analysis: { label: "Analyze", icon: <FileText className="w-4 h-4" />, color: "bg-teal-500/20 text-teal-400" },
++  write_program: { label: "Write", icon: <Terminal className="w-4 h-4" />, color: "bg-pink-500/20 text-pink-400" },
+ };
+ 
+ // Lazy-build a map for quick lookup
+@@ -1026,6 +1027,17 @@ export default function QuizClient() {
+               />
+             </CardContent>
+           </Card>
++        ) : currentQuestion && currentQuestion.type === 'write_program' && currentQuestion.interactive?.programData ? (
++          <WriteProgramChallenge
++            key={currentQuestionId}
++            filename={currentQuestion.interactive.programData.filename}
++            description={currentQuestion.question}
++            expectedOutput={currentQuestion.interactive.programData.expectedOutput}
++            sampleSolution={currentQuestion.interactive.programData.sampleSolution}
++            requiredElements={currentQuestion.interactive.programData.requiredElements}
++            hints={currentQuestion.interactive.programData.hints}
++            onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
++          />
+         ) : currentQuestion ? (
+           <QuestionCard
+             key={currentQuestionId}
+diff --git a/components/interactive/index.tsx b/components/interactive/index.tsx
+index 50abfd2..ba5e93c 100644
+--- a/components/interactive/index.tsx
++++ b/components/interactive/index.tsx
+@@ -1,3 +1,4 @@
+ export { JavaCodeEditor } from './java-code-editor';
+ export { VariableTraceViz } from './variable-trace-viz';
+ export { CodeOutputComparison } from './code-output-comparison';
++export { WriteProgramChallenge } from './write-program-challenge';
+diff --git a/components/interactive/write-program-challenge.tsx b/components/interactive/write-program-challenge.tsx
+new file mode 100644
+index 0000000..c21441b
+--- /dev/null
++++ b/components/interactive/write-program-challenge.tsx
+@@ -0,0 +1,325 @@
++'use client';
++
++import { useState, useCallback } from 'react';
++import { Card } from '@/components/ui/card';
++import { Badge } from '@/components/ui/badge';
++import { Button } from '@/components/ui/button';
++import { cn } from '@/lib/utils';
++import { parseJava, type DiagnosticError } from '@/lib/java-parser';
++import { Terminal, AlertTriangle, Check, X, Eye, Lightbulb, ChevronRight } from 'lucide-react';
++
++export interface WriteProgramChallengeProps {
++  filename: string;
++  description: string;
++  expectedOutput: string;
++  sampleSolution: string;
++  requiredElements?: string[];
++  hints?: string[];
++  onAnswer: (isCorrect: boolean, penalty: number) => void;
++}
++
++/** Structural checks that run before output comparison */
++function checkStructure(
++  code: string,
++  filename: string,
++  requiredElements?: string[],
++): { pass: boolean; issues: string[] } {
++  const issues: string[] = [];
++
++  // Check classname matches filename (minus .java)
++  const expectedClass = filename.replace(/\.java$/, '');
++  const classMatch = code.match(/public\s+class\s+(\w+)/);
++  if (!classMatch) {
++    issues.push('Missing public class declaration');
++  } else if (classMatch[1] !== expectedClass) {
++    issues.push(`Class name "${classMatch[1]}" doesn't match filename "${expectedClass}"`);
++  }
++
++  // Check main method
++  if (!/public\s+static\s+void\s+main\s*\(\s*String\s*\[\]\s*\w+\s*\)/.test(code)) {
++    issues.push('Missing or incorrect main method signature');
++  }
++
++  // Check required elements
++  if (requiredElements) {
++    for (const req of requiredElements) {
++      if (!code.includes(req)) {
++        issues.push(`Missing required element: ${req}`);
++      }
++    }
++  }
++
++  return { pass: issues.length === 0, issues };
++}
++
++/** Normalize output for comparison (strip trailing whitespace per line, trailing blank lines) */
++function normalizeOutput(s: string): string {
++  return s.replace(/[ \t]+$/gm, '').replace(/\n+$/, '');
++}
++
++export function WriteProgramChallenge({
++  filename,
++  description,
++  expectedOutput,
++  sampleSolution,
++  requiredElements,
++  hints,
++  onAnswer,
++}: WriteProgramChallengeProps) {
++  const expectedClass = filename.replace(/\.java$/, '');
++  const initialCode = `// ${filename}\npublic class ${expectedClass} {\n    public static void main(String[] args) {\n        \n    }\n}`;
++
++  const [code, setCode] = useState(initialCode);
++  const [submitted, setSubmitted] = useState(false);
++  const [syntaxErrors, setSyntaxErrors] = useState<DiagnosticError[]>([]);
++  const [structureIssues, setStructureIssues] = useState<string[]>([]);
++  const [showSolution, setShowSolution] = useState(false);
++  const [showHint, setShowHint] = useState(false);
++  const [hintIndex, setHintIndex] = useState(0);
++  const [result, setResult] = useState<'correct' | 'partial' | 'incorrect' | null>(null);
++
++  const lines = code.split('\n');
++
++  const handleSubmit = useCallback(() => {
++    // 1. Syntax check
++    const parseResult = parseJava(code, 'full');
++    setSyntaxErrors(parseResult.errors);
++
++    if (parseResult.errors.length > 0) {
++      // Syntax errors — don't score yet, let them fix
++      return;
++    }
++
++    // 2. Structure check
++    const structure = checkStructure(code, filename, requiredElements);
++    setStructureIssues(structure.issues);
++
++    // 3. Determine result
++    // For now, since we can't execute Java in browser, we check structure
++    // and give partial credit for correct structure even if we can't verify output.
++    // Full output verification would require SSG/Piston.
++    setSubmitted(true);
++
++    if (structure.pass) {
++      // Structure is correct — award credit
++      // In future, compare actual output via SSG
++      setResult('correct');
++      onAnswer(true, 0);
++    } else if (structure.issues.length <= 1) {
++      setResult('partial');
++      onAnswer(false, 1);
++    } else {
++      setResult('incorrect');
++      onAnswer(false, 2);
++    }
++  }, [code, filename, requiredElements, onAnswer]);
++
++  const handleShowNextHint = () => {
++    if (!showHint) {
++      setShowHint(true);
++    } else if (hints && hintIndex < hints.length - 1) {
++      setHintIndex(prev => prev + 1);
++    }
++  };
++
++  return (
++    <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur border-border/50">
++      <div className="p-6 space-y-5">
++        {/* Badge */}
++        <div className="flex items-center justify-between">
++          <Badge variant="outline" className="gap-1.5 text-pink-400 border-pink-500/30 bg-pink-500/10">
++            <Terminal className="w-4 h-4" />
++            Write Program
++          </Badge>
++        </div>
++
++        {/* Problem description */}
++        <div className="space-y-2">
++          <h2 className="text-xl font-semibold leading-relaxed">{description}</h2>
++          <p className="text-sm text-muted-foreground">
++            Expected output: <code className="bg-muted/50 px-1.5 py-0.5 rounded font-mono text-green-400">{expectedOutput}</code>
++          </p>
++        </div>
++
++        {/* File tab */}
++        <div className="flex items-center">
++          <div className="px-3 py-1.5 bg-muted/50 border border-b-0 border-border/50 rounded-t-lg text-xs font-mono text-foreground/80 flex items-center gap-1.5">
++            <span className="text-blue-400">☕</span>
++            {filename}
++          </div>
++        </div>
++
++        {/* Code editor */}
++        <div className="rounded-b-lg rounded-tr-lg border border-border/50 bg-black/40 overflow-hidden">
++          <div className="relative flex">
++            {/* Line numbers */}
++            <div className="flex-shrink-0 bg-muted/20 border-r border-border/30 select-none py-2">
++              {lines.map((_, i) => (
++                <div
++                  key={i}
++                  className="px-3 h-6 flex items-center justify-end text-xs font-mono text-foreground/40"
++                >
++                  {i + 1}
++                </div>
++              ))}
++            </div>
++
++            {/* Textarea */}
++            <textarea
++              value={code}
++              onChange={(e) => {
++                setCode(e.target.value);
++                setSyntaxErrors([]);
++                setStructureIssues([]);
++              }}
++              readOnly={submitted}
++              spellCheck={false}
++              autoCapitalize="off"
++              autoCorrect="off"
++              className={cn(
++                'w-full p-2 font-mono text-sm leading-6 bg-transparent resize-none outline-none text-foreground/90',
++                submitted && 'opacity-80 cursor-default',
++              )}
++              style={{
++                fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
++                minHeight: `${Math.max(lines.length * 24 + 16, 200)}px`,
++                tabSize: 4,
++              }}
++              onKeyDown={(e) => {
++                if (e.key === 'Tab') {
++                  e.preventDefault();
++                  const ta = e.currentTarget;
++                  const start = ta.selectionStart;
++                  const end = ta.selectionEnd;
++                  const newCode = code.substring(0, start) + '    ' + code.substring(end);
++                  setCode(newCode);
++                  requestAnimationFrame(() => {
++                    ta.selectionStart = ta.selectionEnd = start + 4;
++                  });
++                }
++              }}
++            />
++          </div>
++        </div>
++
++        {/* Syntax errors */}
++        {syntaxErrors.length > 0 && (
++          <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 space-y-1">
++            <div className="flex items-center gap-2 text-red-400 text-sm font-medium">
++              <AlertTriangle className="w-4 h-4" />
++              Syntax Errors
++            </div>
++            {syntaxErrors.map((err, i) => (
++              <p key={i} className="text-xs text-red-400/80 font-mono pl-6">
++                Line {err.line}: {err.message}
++              </p>
++            ))}
++          </div>
++        )}
++
++        {/* Structure issues (post-submit) */}
++        {submitted && structureIssues.length > 0 && (
++          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-1">
++            <div className="flex items-center gap-2 text-amber-400 text-sm font-medium">
++              <AlertTriangle className="w-4 h-4" />
++              Structure Issues
++            </div>
++            {structureIssues.map((issue, i) => (
++              <p key={i} className="text-xs text-amber-400/80 pl-6">• {issue}</p>
++            ))}
++          </div>
++        )}
++
++        {/* Hints */}
++        {!submitted && hints && hints.length > 0 && (
++          <Button
++            variant="ghost"
++            size="sm"
++            onClick={handleShowNextHint}
++            className="gap-1.5 text-muted-foreground hover:text-foreground"
++          >
++            <Lightbulb className="w-4 h-4" />
++            {showHint ? (hintIndex < hints.length - 1 ? 'Next Hint' : 'No More Hints') : 'Show Hint'}
++          </Button>
++        )}
++        {showHint && hints && (
++          <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3">
++            {hints.slice(0, hintIndex + 1).map((hint, i) => (
++              <p key={i} className="text-sm text-blue-400/80">
++                <span className="font-medium">Hint {i + 1}:</span> {hint}
++              </p>
++            ))}
++          </div>
++        )}
++
++        {/* Submit / Result */}
++        {!submitted ? (
++          <Button onClick={handleSubmit} className="w-full gap-2">
++            <ChevronRight className="w-4 h-4" />
++            Check Program
++          </Button>
++        ) : (
++          <div className="space-y-4">
++            {/* Result badge */}
++            <div
++              className={cn(
++                'rounded-lg border px-4 py-3 text-sm',
++                result === 'correct'
++                  ? 'border-green-500/50 bg-green-500/10 text-green-400'
++                  : result === 'partial'
++                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
++                    : 'border-red-500/50 bg-red-500/10 text-red-400',
++              )}
++            >
++              {result === 'correct' ? (
++                <div className="flex items-center gap-2">
++                  <Check className="w-5 h-5" />
++                  <span className="font-semibold">Program structure looks correct!</span>
++                </div>
++              ) : result === 'partial' ? (
++                <div className="flex items-center gap-2">
++                  <AlertTriangle className="w-5 h-5" />
++                  <span className="font-semibold">Almost there — minor structural issues</span>
++                </div>
++              ) : (
++                <div className="flex items-center gap-2">
++                  <X className="w-5 h-5" />
++                  <span className="font-semibold">Structural issues found — review the solution</span>
++                </div>
++              )}
++            </div>
++
++            {/* Show/hide solution */}
++            <Button
++              variant="outline"
++              size="sm"
++              onClick={() => setShowSolution(!showSolution)}
++              className="gap-1.5"
++            >
++              <Eye className="w-4 h-4" />
++              {showSolution ? 'Hide Solution' : 'View Solution'}
++            </Button>
++
++            {showSolution && (
++              <div className="space-y-2">
++                <p className="text-xs text-muted-foreground">Reference solution:</p>
++                <div className="rounded-lg border border-border/50 bg-black/40 overflow-x-auto">
++                  <pre className="font-mono text-sm leading-relaxed text-foreground/90 p-3">
++                    {sampleSolution.split('\n').map((line, i) => (
++                      <div key={i} className="px-1">
++                        <span className="mr-4 inline-block w-8 text-right text-foreground/40">
++                          {i + 1}
++                        </span>
++                        {line}
++                      </div>
++                    ))}
++                  </pre>
++                </div>
++              </div>
++            )}
++          </div>
++        )}
++      </div>
++    </Card>
++  );
++}
+diff --git a/lib/cs-game-data.ts b/lib/cs-game-data.ts
+index 609507f..888ee59 100644
+--- a/lib/cs-game-data.ts
++++ b/lib/cs-game-data.ts
+@@ -23,7 +23,8 @@ export type CSQuestionType =
+   | 'complete_code'
+   | 'valid_invalid'
+   | 'match_definition'
+-  | 'code_analysis';
++  | 'code_analysis'
++  | 'write_program';
+ 
+ export interface VariableTraceData {
+   code: string;
+@@ -42,11 +43,21 @@ export interface ErrorData {
+   errorLine: number;
+ }
+ 
++export interface ProgramData {
++  filename: string;          // e.g., "HelloWorld.java"
++  description: string;       // problem statement
++  expectedOutput: string;    // what correct code should print
++  sampleSolution: string;    // reference solution to show after submission
++  requiredElements?: string[]; // structural checks, e.g. ["public class", "public static void main"]
++  hints?: string[];           // progressive hints
++}
++
+ export interface InteractiveData {
+   code?: string;
+   variantData?: VariableTraceData;
+   outputData?: CodeOutputData;
+   errorData?: ErrorData;
++  programData?: ProgramData;
+ }
+ 
+ export interface CSUnifiedQuestion {
+@@ -953,6 +964,74 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
+     distractors: ['char', 'int', 'double'],
+     explanation: 'The variable message is of type String because it is initialized with a string literal.',
+   },
++  {
++    id: 'ch2-output-001',
++    chapter: 2,
++    section: '2.12',
++    type: 'predict_output',
++    question: 'What does this code print? (use separate lines if needed)',
++    formula: 'System.out.println("Hello");\nSystem.out.println("World");',
++    correctAnswer: 'Hello\nWorld',
++    distractors: ['HelloWorld', 'Hello World', 'Hello\\nWorld'],
++    explanation: 'Each println() prints its argument and then moves to a new line. So "Hello" and "World" appear on separate lines.',
++    interactive: {
++      outputData: {
++        code: 'System.out.println("Hello");\nSystem.out.println("World");',
++        expectedOutput: 'Hello\nWorld',
++      },
++    },
++  },
++  {
++    id: 'ch2-output-002',
++    chapter: 2,
++    section: '2.12',
++    type: 'predict_output',
++    question: 'What does this code print? (use separate lines if needed)',
++    formula: 'System.out.print("Hello");\nSystem.out.println("World");',
++    correctAnswer: 'HelloWorld',
++    distractors: ['Hello World', 'Hello\\nWorld', 'Hello\nWorld'],
++    explanation: 'print() does NOT add a newline, so "World" appears on the same line right after "Hello". println() adds a newline after "World".',
++    interactive: {
++      outputData: {
++        code: 'System.out.print("Hello");\nSystem.out.println("World");',
++        expectedOutput: 'HelloWorld',
++      },
++    },
++  },
++  {
++    id: 'ch2-output-003',
++    chapter: 2,
++    section: '2.12',
++    type: 'predict_output',
++    question: 'What does this code print? (use separate lines if needed)',
++    formula: 'System.out.print("A");\nSystem.out.print("B");\nSystem.out.println("C");\nSystem.out.println("D");',
++    correctAnswer: 'ABC\nD',
++    distractors: ['ABCD', 'A\nB\nC\nD', 'A B C\nD'],
++    explanation: 'print() keeps output on the same line. The first println() prints "C" and adds a newline. Then "D" appears on the next line.',
++    interactive: {
++      outputData: {
++        code: 'System.out.print("A");\nSystem.out.print("B");\nSystem.out.println("C");\nSystem.out.println("D");',
++        expectedOutput: 'ABC\nD',
++      },
++    },
++  },
++  {
++    id: 'ch2-output-004',
++    chapter: 2,
++    section: '2.12',
++    type: 'predict_output',
++    question: 'What does this code print? (use separate lines if needed)',
++    formula: 'int x = 5;\nint y = 10;\nSystem.out.println(x);\nSystem.out.println(y);\nSystem.out.println(x + y);',
++    correctAnswer: '5\n10\n15',
++    distractors: ['5 10 15', '51015', '5\n10\n510'],
++    explanation: 'Each println() outputs its value on a separate line. The third call prints x + y = 15 (addition, not concatenation, since both are int).',
++    interactive: {
++      outputData: {
++        code: 'int x = 5;\nint y = 10;\nSystem.out.println(x);\nSystem.out.println(y);\nSystem.out.println(x + y);',
++        expectedOutput: '5\n10\n15',
++      },
++    },
++  },
+ ];
+ 
+ // 2.13: Numeric Types
+@@ -1093,6 +1172,152 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
+ // UNIFIED QUESTION POOL EXPORT
+ // ============================================
+ 
++// ============================================
++// WRITE PROGRAM CHALLENGES
++// ============================================
++const writeProgramChallenges: CSUnifiedQuestion[] = [
++  {
++    id: 'wp-001',
++    chapter: 1,
++    section: '1.5',
++    type: 'write_program',
++    question: 'Write a complete Java program in HelloWorld.java that prints "Hello, World!" to the console.',
++    correctAnswer: 'A complete HelloWorld.java program that prints "Hello, World!"',
++    explanation: 'Every Java program needs a class whose name matches the filename, and a main method as the entry point.',
++    keyFacts: [
++      'Class name must match filename (without .java)',
++      'main method signature: public static void main(String[] args)',
++      'Use System.out.println() to print with newline',
++    ],
++    interactive: {
++      programData: {
++        filename: 'HelloWorld.java',
++        description: 'Write a complete Java program that prints "Hello, World!" to the console.',
++        expectedOutput: 'Hello, World!',
++        sampleSolution: `// HelloWorld.java\npublic class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
++        requiredElements: ['public class HelloWorld', 'public static void main', 'System.out.println'],
++        hints: [
++          'Start with: public class HelloWorld {',
++          'Inside the class, add: public static void main(String[] args) {',
++          'Use System.out.println("Hello, World!"); to print',
++        ],
++      },
++    },
++  },
++  {
++    id: 'wp-002',
++    chapter: 2,
++    section: '2.4',
++    type: 'write_program',
++    question: 'Write a complete Java program in AreaCalculator.java that calculates the area of a circle with radius 5.0 and prints the result.',
++    correctAnswer: 'A program that calculates and prints the area of a circle with radius 5.0',
++    explanation: 'Area of a circle = Math.PI * radius * radius. Use Math.PI for the constant.',
++    keyFacts: [
++      'Math.PI provides the value of pi',
++      'Area formula: Math.PI * r * r',
++      'Use double for floating-point values',
++    ],
++    interactive: {
++      programData: {
++        filename: 'AreaCalculator.java',
++        description: 'Write a complete Java program that declares a double variable radius = 5.0, calculates the area of a circle (π × r²), and prints the result.',
++        expectedOutput: '78.53981633974483',
++        sampleSolution: `// AreaCalculator.java\npublic class AreaCalculator {\n    public static void main(String[] args) {\n        double radius = 5.0;\n        double area = Math.PI * radius * radius;\n        System.out.println(area);\n    }\n}`,
++        requiredElements: ['public class AreaCalculator', 'public static void main', 'double', 'Math.PI'],
++        hints: [
++          'Declare: double radius = 5.0;',
++          'Calculate: double area = Math.PI * radius * radius;',
++          'Print: System.out.println(area);',
++        ],
++      },
++    },
++  },
++  {
++    id: 'wp-003',
++    chapter: 2,
++    section: '2.1',
++    type: 'write_program',
++    question: 'Write a complete Java program in SwapValues.java that declares int a = 10 and int b = 20, swaps their values using a temp variable, and prints both.',
++    correctAnswer: 'A program that swaps two integer values and prints them',
++    explanation: 'Swapping requires a temporary variable: temp = a; a = b; b = temp;',
++    keyFacts: [
++      'Cannot swap without a temporary variable (or XOR trick)',
++      'Order matters: save one value before overwriting',
++      'This is a classic variable manipulation pattern',
++    ],
++    interactive: {
++      programData: {
++        filename: 'SwapValues.java',
++        description: 'Write a complete Java program that declares int a = 10 and int b = 20, swaps their values using a temporary variable, then prints a and b (each on their own line).',
++        expectedOutput: '20\n10',
++        sampleSolution: `// SwapValues.java\npublic class SwapValues {\n    public static void main(String[] args) {\n        int a = 10;\n        int b = 20;\n        int temp = a;\n        a = b;\n        b = temp;\n        System.out.println(a);\n        System.out.println(b);\n    }\n}`,
++        requiredElements: ['public class SwapValues', 'public static void main', 'int a', 'int b'],
++        hints: [
++          'You need a third variable to hold one value during the swap',
++          'int temp = a; then a = b; then b = temp;',
++          'Print each value with System.out.println()',
++        ],
++      },
++    },
++  },
++  {
++    id: 'wp-004',
++    chapter: 2,
++    section: '2.8',
++    type: 'write_program',
++    question: 'Write a complete Java program in TempConverter.java that converts 98.6°F to Celsius and prints the result.',
++    correctAnswer: 'A program that converts 98.6°F to Celsius',
++    explanation: 'Celsius = (Fahrenheit - 32) * 5.0 / 9.0. Use 5.0/9.0 not 5/9 to avoid integer division.',
++    keyFacts: [
++      'Formula: C = (F - 32) × 5/9',
++      'Must use 5.0/9.0 (not 5/9) to get floating-point division',
++      'Integer division 5/9 equals 0 in Java!',
++    ],
++    interactive: {
++      programData: {
++        filename: 'TempConverter.java',
++        description: 'Write a complete Java program that converts 98.6 degrees Fahrenheit to Celsius using the formula C = (F - 32) × 5/9 and prints the Celsius value.',
++        expectedOutput: '37.0',
++        sampleSolution: `// TempConverter.java\npublic class TempConverter {\n    public static void main(String[] args) {\n        double fahrenheit = 98.6;\n        double celsius = (fahrenheit - 32) * 5.0 / 9.0;\n        System.out.println(celsius);\n    }\n}`,
++        requiredElements: ['public class TempConverter', 'public static void main', 'double'],
++        hints: [
++          'Declare: double fahrenheit = 98.6;',
++          'Use 5.0/9.0, not 5/9 (integer division trap!)',
++          'double celsius = (fahrenheit - 32) * 5.0 / 9.0;',
++        ],
++      },
++    },
++  },
++  {
++    id: 'wp-005',
++    chapter: 2,
++    section: '2.15',
++    type: 'write_program',
++    question: 'Write a complete Java program in MathDemo.java that prints the square root of 144 and 2 raised to the power of 10.',
++    correctAnswer: 'A program using Math.sqrt() and Math.pow()',
++    explanation: 'Java provides Math.sqrt() and Math.pow() for common mathematical operations.',
++    keyFacts: [
++      'Math.sqrt(x) returns the square root as a double',
++      'Math.pow(base, exponent) returns base^exponent as a double',
++      'Both are static methods in the Math class (no import needed)',
++    ],
++    interactive: {
++      programData: {
++        filename: 'MathDemo.java',
++        description: 'Write a complete Java program that prints Math.sqrt(144) on the first line and Math.pow(2, 10) on the second line.',
++        expectedOutput: '12.0\n1024.0',
++        sampleSolution: `// MathDemo.java\npublic class MathDemo {\n    public static void main(String[] args) {\n        System.out.println(Math.sqrt(144));\n        System.out.println(Math.pow(2, 10));\n    }\n}`,
++        requiredElements: ['public class MathDemo', 'public static void main', 'Math.sqrt', 'Math.pow'],
++        hints: [
++          'Math.sqrt() and Math.pow() are in java.lang.Math (auto-imported)',
++          'System.out.println(Math.sqrt(144)); prints the square root',
++          'System.out.println(Math.pow(2, 10)); prints 2^10',
++        ],
++      },
++    },
++  },
++];
++
+ export const unifiedQuestionPool: CSUnifiedQuestion[] = [
+   ...ch1ComputerComponents,
+   ...ch1LanguageHistory,
+@@ -1114,6 +1339,7 @@ export const unifiedQuestionPool: CSUnifiedQuestion[] = [
+   ...ch2NumericTypes,
+   ...ch2Overflow,
+   ...ch2RandomNumbers,
++  ...writeProgramChallenges,
+ ];
+ 
+ export function shuffleArray<T>(arr: T[]): T[] {
+-- 
+2.34.1
+

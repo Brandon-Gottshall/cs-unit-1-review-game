@@ -31,6 +31,7 @@ const VALID_TYPES: CSQuestionType[] = [
   'valid_invalid',
   'match_definition',
   'code_analysis',
+  'write_program',
 ];
 
 // ─── Question Pool Integrity ─────────────────────────────────

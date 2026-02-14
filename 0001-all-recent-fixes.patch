@@ -1,0 +1,988 @@
+From 6f3ecca0bd36318a711aa63c26529af6e464eb43 Mon Sep 17 00:00:00 2001
+From: Brandon Gottshall <blgottshall@gmail.com>
+Date: Sat, 14 Feb 2026 02:49:38 +0000
+Subject: [PATCH 1/2] Fix trace question layout, output matching strictness,
+ and syntax highlighting
+
+- Rewrite VariableTraceViz: code block always visible, full-width stacked MC
+  options with correct answer included, two-guess elimination support
+- Fix output matching to require correct line structure (newlines matter)
+- Fix highlightLines import collision in JavaCodeEditor (prop shadowed import)
+- Add Java syntax highlighting (java-syntax-highlight.tsx)
+- Add SSG build script for Java snippet outputs
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+---
+ app/globals.css                               |  23 ++
+ app/quiz/quiz-client.tsx                      |  17 +-
+ .../interactive/code-output-comparison.tsx    |   2 +-
+ components/interactive/java-code-editor.tsx   |  56 +++--
+ components/interactive/variable-trace-viz.tsx | 223 +++++++++++-------
+ lib/java-syntax-highlight.tsx                 | 207 ++++++++++++++++
+ scripts/generate-snippet-outputs.mjs          | 132 +++++++++++
+ 7 files changed, 542 insertions(+), 118 deletions(-)
+ create mode 100644 lib/java-syntax-highlight.tsx
+ create mode 100644 scripts/generate-snippet-outputs.mjs
+
+diff --git a/app/globals.css b/app/globals.css
+index 59f0dd5..b4d7c51 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -219,3 +219,26 @@
+ .focus-ring {
+   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+ }
++
++/* ── Syntax highlighting tokens ─────────────────────────────── */
++/* Light mode */
++.syn-kw   { color: oklch(0.45 0.3 300); }          /* keywords – purple */
++.syn-type { color: oklch(0.45 0.2 250); }           /* types – blue */
++.syn-str  { color: oklch(0.45 0.15 145); }          /* strings – green */
++.syn-cmt  { color: oklch(0.55 0.02 270); font-style: italic; } /* comments – gray */
++.syn-num  { color: oklch(0.45 0.15 200); }          /* numbers – teal */
++.syn-bool { color: oklch(0.5 0.2 30); }             /* booleans – orange */
++.syn-ann  { color: oklch(0.5 0.18 85); }            /* annotations – gold */
++.syn-fn   { color: oklch(0.45 0.15 85); }           /* methods – dark gold */
++.syn-op   { color: oklch(0.35 0.02 270); }          /* operators – dark gray */
++
++/* Dark mode */
++.dark .syn-kw   { color: oklch(0.75 0.2 300); }     /* keywords – light purple */
++.dark .syn-type { color: oklch(0.72 0.15 230); }    /* types – light blue */
++.dark .syn-str  { color: oklch(0.78 0.14 145); }    /* strings – light green */
++.dark .syn-cmt  { color: oklch(0.5 0.02 270); font-style: italic; } /* comments */
++.dark .syn-num  { color: oklch(0.8 0.12 195); }     /* numbers – cyan */
++.dark .syn-bool { color: oklch(0.75 0.17 55); }     /* booleans – orange */
++.dark .syn-ann  { color: oklch(0.8 0.15 85); }      /* annotations – yellow */
++.dark .syn-fn   { color: oklch(0.85 0.12 85); }     /* methods – light yellow */
++.dark .syn-op   { color: oklch(0.7 0.01 270); }     /* operators – light gray */
+diff --git a/app/quiz/quiz-client.tsx b/app/quiz/quiz-client.tsx
+index 045e5b2..24de612 100644
+--- a/app/quiz/quiz-client.tsx
++++ b/app/quiz/quiz-client.tsx
+@@ -22,6 +22,7 @@ import {
+   shuffleArray,
+ } from "@/lib/cs-game-data";
+ import { JavaCodeEditor, VariableTraceViz, CodeOutputComparison } from "@/components/interactive";
++import { highlightLines } from "@/lib/java-syntax-highlight";
+ import {
+   getSession,
+   resetSession,
+@@ -408,9 +409,11 @@ function QuestionCard({ question, streak, onAnswer }: QuestionCardProps) {
+         <div className="space-y-2">
+           <h2 className="text-xl font-semibold leading-relaxed">{question.question}</h2>
+           {question.formula && (
+-            <p className="text-sm text-muted-foreground font-mono bg-muted/50 px-3 py-1.5 rounded inline-block">
+-              {question.formula}
+-            </p>
++            <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
++              <code>{highlightLines(question.formula).map((line, i) => (
++                <div key={i}>{line}</div>
++              ))}</code>
++            </pre>
+           )}
+         </div>
+ 
+@@ -1123,9 +1126,11 @@ export default function QuizClient() {
+               <h2 className="text-xl font-semibold">{reviewQuestion.question}</h2>
+ 
+               {reviewQuestion.formula && (
+-                <p className="text-sm text-muted-foreground font-mono bg-muted/50 px-3 py-1.5 rounded inline-block">
+-                  {reviewQuestion.formula}
+-                </p>
++                <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
++                  <code>{highlightLines(reviewQuestion.formula).map((line, i) => (
++                    <div key={i}>{line}</div>
++                  ))}</code>
++                </pre>
+               )}
+ 
+               {/* Show all answer options */}
+diff --git a/components/interactive/code-output-comparison.tsx b/components/interactive/code-output-comparison.tsx
+index 9300f8d..3be523f 100644
+--- a/components/interactive/code-output-comparison.tsx
++++ b/components/interactive/code-output-comparison.tsx
+@@ -96,7 +96,7 @@ export function CodeOutputComparison({
+   const diffs = submitted ? computeDiff(userOutput, expectedOutput) : [];
+ 
+   return (
+-    <div className="flex flex-col gap-6">
++    <div className="flex flex-col gap-6 max-w-2xl mx-auto">
+       {/* Question Prompt */}
+       <div>
+         <h3 className="text-lg font-semibold text-foreground">{questionPrompt}</h3>
+diff --git a/components/interactive/java-code-editor.tsx b/components/interactive/java-code-editor.tsx
+index dcd48cd..155eaff 100644
+--- a/components/interactive/java-code-editor.tsx
++++ b/components/interactive/java-code-editor.tsx
+@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
+ import { parseJava, type DiagnosticError } from '@/lib/java-parser';
+ import { cn } from '@/lib/utils';
+ import { AlertTriangle } from 'lucide-react';
++import { highlightLines as syntaxHighlight } from '@/lib/java-syntax-highlight';
+ 
+ interface JavaCodeEditorProps {
+   /** Initial code to display */
+@@ -127,28 +128,41 @@ export function JavaCodeEditor({
+           })}
+         </div>
+ 
+-        {/* Code textarea (overlaid on pre for coloring) */}
++        {/* Code display / editor */}
+         <div className="flex-1 relative overflow-auto">
+-          <textarea
+-            ref={textareaRef}
+-            value={code}
+-            onChange={handleChange}
+-            onKeyDown={readOnly ? undefined : handleKeyDown}
+-            readOnly={readOnly}
+-            spellCheck={false}
+-            autoCapitalize="off"
+-            autoCorrect="off"
+-            className={cn(
+-              'w-full h-full p-3 font-mono text-sm leading-6 bg-transparent resize-none outline-none',
+-              'text-foreground caret-primary',
+-              readOnly && 'cursor-default opacity-90',
+-            )}
+-            style={{
+-              fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+-              minHeight: `${lines.length * 24 + 24}px`,
+-              tabSize: 2,
+-            }}
+-          />
++          {readOnly ? (
++            <div
++              className="w-full h-full p-3 font-mono text-sm leading-6 text-foreground/90 whitespace-pre"
++              style={{
++                fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
++                minHeight: `${lines.length * 24 + 24}px`,
++                tabSize: 2,
++              }}
++            >
++              {syntaxHighlight(code).map((highlighted, i) => (
++                <div key={i} className="h-6">{highlighted}</div>
++              ))}
++            </div>
++          ) : (
++            <textarea
++              ref={textareaRef}
++              value={code}
++              onChange={handleChange}
++              onKeyDown={handleKeyDown}
++              spellCheck={false}
++              autoCapitalize="off"
++              autoCorrect="off"
++              className={cn(
++                'w-full h-full p-3 font-mono text-sm leading-6 bg-transparent resize-none outline-none',
++                'text-foreground caret-primary',
++              )}
++              style={{
++                fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
++                minHeight: `${lines.length * 24 + 24}px`,
++                tabSize: 2,
++              }}
++            />
++          )}
+         </div>
+       </div>
+ 
+diff --git a/components/interactive/variable-trace-viz.tsx b/components/interactive/variable-trace-viz.tsx
+index d1f0cbc..6785dcf 100644
+--- a/components/interactive/variable-trace-viz.tsx
++++ b/components/interactive/variable-trace-viz.tsx
+@@ -1,12 +1,14 @@
+ 'use client';
+ 
+-import { useState } from 'react';
+-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
++import { useState, useMemo } from 'react';
++import { ChevronLeft, ChevronRight } from 'lucide-react';
+ import { Button } from '@/components/ui/button';
+ import { Card } from '@/components/ui/card';
+ import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/input';
+ import { cn } from '@/lib/utils';
++import { shuffleArray } from '@/lib/cs-game-data';
++import { highlightLine } from '@/lib/java-syntax-highlight';
+ 
+ export interface TraceStep {
+   line: number;
+@@ -39,15 +41,39 @@ export function VariableTraceViz({
+   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+   const [userAnswer, setUserAnswer] = useState('');
+   const [animatingVars, setAnimatingVars] = useState<Set<string>>(new Set());
++  const [attempt, setAttempt] = useState(1);
++  const [eliminatedOptions, setEliminatedOptions] = useState<Set<string>>(new Set());
+ 
+   const currentStep = steps[currentStepIndex];
+   const codeLines = (code || '').split('\n');
+ 
++  // Build shuffled MC options that include the correct answer
++  const options = useMemo(() => {
++    if (distractors && distractors.length > 0) {
++      return shuffleArray([correctAnswer, ...distractors.slice(0, 3)]);
++    }
++    return null;
++  }, [correctAnswer, distractors]);
++
++  const allowTwoGuesses = options && options.length > 2;
++
+   const handleSubmitAnswer = () => {
++    if (!userAnswer) return;
+     const isCorrect = userAnswer.trim() === correctAnswer.trim();
+-    setAnswerCorrect(isCorrect);
+-    setAnswered(true);
+-    onAnswer(isCorrect, isCorrect ? 0 : 1);
++
++    if (isCorrect) {
++      setAnswerCorrect(true);
++      setAnswered(true);
++      onAnswer(true, attempt === 1 ? 0 : 1);
++    } else if (allowTwoGuesses && attempt === 1) {
++      setEliminatedOptions(prev => new Set([...prev, userAnswer]));
++      setUserAnswer('');
++      setAttempt(2);
++    } else {
++      setAnswerCorrect(false);
++      setAnswered(true);
++      onAnswer(false, 2);
++    }
+   };
+ 
+   const handleNextStep = () => {
+@@ -74,29 +100,81 @@ export function VariableTraceViz({
+     .join('\n');
+ 
+   return (
+-    <div className="flex flex-col gap-6">
+-      {/* Question Prompt */}
+-      <div className="space-y-3">
+-        <h3 className="text-lg font-semibold text-foreground">{questionPrompt}</h3>
++    <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur border-border/50">
++      <div className="p-6 space-y-6">
++        {/* Badge row */}
++        <div className="flex items-center justify-between">
++          <Badge variant="outline" className="gap-1.5 text-cyan-400 border-cyan-500/30 bg-cyan-500/10">
++            <span className="text-sm">🔍</span>
++            Trace
++          </Badge>
++        </div>
++
++        {/* Question */}
++        <h2 className="text-xl font-semibold leading-relaxed">{questionPrompt}</h2>
+ 
++        {/* Code — ALWAYS visible so student can read it before answering */}
++        <div className="overflow-x-auto rounded-lg border border-border/50 bg-black/40">
++          <pre className="font-mono text-sm leading-relaxed text-foreground/90">
++            {codeLines.map((line, idx) => (
++              <div
++                key={idx}
++                className={cn(
++                  'px-4 py-1',
++                  answered && currentStep?.line === idx + 1
++                    ? 'bg-yellow-500/20 font-semibold text-yellow-300'
++                    : ''
++                )}
++              >
++                <span className="mr-4 inline-block w-8 text-right text-foreground/40">
++                  {idx + 1}
++                </span>
++                {highlightLine(line)}
++              </div>
++            ))}
++          </pre>
++        </div>
++
++        {/* Answer section */}
+         {!answered && (
+           <div className="space-y-3">
+-            {distractors ? (
+-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+-                {distractors.map((option) => (
+-                  <Button
+-                    key={option}
+-                    variant={userAnswer === option ? 'default' : 'outline'}
+-                    onClick={() => setUserAnswer(option)}
+-                    className="font-mono"
+-                  >
+-                    {option}
+-                  </Button>
+-                ))}
++            {/* Two-guess indicator */}
++            {attempt === 2 && (
++              <div className="flex items-center gap-2 text-amber-400 text-sm">
++                <span>⚠</span>
++                <span>Second chance — one option eliminated</span>
++              </div>
++            )}
++
++            {options ? (
++              /* MC options — full-width stacked like QuestionCard */
++              <div className="space-y-2">
++                {options.map((option) => {
++                  const isEliminated = eliminatedOptions.has(option);
++                  const isSelected = userAnswer === option;
++                  return (
++                    <button
++                      key={option}
++                      onClick={() => !isEliminated && setUserAnswer(option)}
++                      disabled={isEliminated}
++                      className={cn(
++                        'w-full text-left px-4 py-3 rounded-lg border transition-all font-mono text-sm',
++                        isEliminated
++                          ? 'opacity-40 cursor-not-allowed border-border/30 bg-muted/20 line-through'
++                          : isSelected
++                            ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/50'
++                            : 'border-border/50 bg-card/30 hover:bg-card/60 hover:border-border'
++                      )}
++                    >
++                      {option}
++                    </button>
++                  );
++                })}
+               </div>
+             ) : (
++              /* Free-text input */
+               <Input
+-                placeholder="Enter your answer"
++                placeholder="Enter your answer (e.g. x = 15, y = 10)"
+                 value={userAnswer}
+                 onChange={(e) => setUserAnswer(e.target.value)}
+                 className="font-mono"
+@@ -105,6 +183,7 @@ export function VariableTraceViz({
+                 }}
+               />
+             )}
++
+             <Button
+               onClick={handleSubmitAnswer}
+               disabled={!userAnswer}
+@@ -115,10 +194,11 @@ export function VariableTraceViz({
+           </div>
+         )}
+ 
++        {/* Answer feedback */}
+         {answered && (
+           <div
+             className={cn(
+-              'rounded-lg border px-4 py-2 font-mono text-sm',
++              'rounded-lg border px-4 py-3 font-mono text-sm',
+               answerCorrect
+                 ? 'border-green-500/50 bg-green-500/10 text-green-400'
+                 : 'border-red-500/50 bg-red-500/10 text-red-400'
+@@ -137,76 +217,39 @@ export function VariableTraceViz({
+             )}
+           </div>
+         )}
+-      </div>
+ 
+-      {answered && (
+-        <div className="grid gap-6 lg:grid-cols-2">
+-          {/* Code Panel */}
+-          <Card className="bg-card/50 backdrop-blur border-border/50">
+-            <div className="p-4">
+-              <Badge variant="secondary" className="mb-3">
+-                Code
+-              </Badge>
+-              <div className="overflow-x-auto rounded border border-border/50 bg-black/40">
+-                <pre className="font-mono text-xs leading-relaxed text-foreground/90">
+-                  {codeLines.map((line, idx) => (
+-                    <div
+-                      key={idx}
+-                      className={cn(
+-                        'px-4 py-1',
+-                        currentStep.line === idx + 1
+-                          ? 'bg-yellow-500/20 font-semibold text-yellow-300'
+-                          : ''
+-                      )}
+-                    >
+-                      <span className="mr-4 inline-block w-8 text-right text-foreground/50">
+-                        {idx + 1}
+-                      </span>
+-                      {line}
+-                    </div>
+-                  ))}
+-                </pre>
+-              </div>
+-            </div>
+-          </Card>
++        {/* Post-answer: step-through debugger */}
++        {answered && steps.length > 0 && Object.keys(currentStep?.variables || {}).length > 0 && (
++          <div className="space-y-4 pt-2 border-t border-border/30">
++            <p className="text-sm text-muted-foreground">Step through the execution:</p>
+ 
+-          {/* Variable State Panel */}
+-          <div className="space-y-4">
+-            {/* Variables Table */}
+-            <Card className="bg-card/50 backdrop-blur border-border/50">
++            {/* Variable State */}
++            <Card className="bg-card/30 border-border/30">
+               <div className="p-4">
+                 <Badge variant="secondary" className="mb-3">
+                   Variable State (Step {currentStepIndex + 1} of {steps.length})
+                 </Badge>
+                 <div className="space-y-2">
+-                  {Object.entries(currentStep.variables).length === 0 ? (
+-                    <p className="text-sm text-foreground/50 italic">
+-                      No variables initialized yet
+-                    </p>
+-                  ) : (
+-                    <div className="space-y-2">
+-                      {Object.entries(currentStep.variables).map(
+-                        ([varName, { type, value }]) => (
+-                          <div
+-                            key={varName}
+-                            className={cn(
+-                              'rounded border border-border/50 bg-black/40 p-3 font-mono text-sm transition-all duration-500',
+-                              animatingVars.has(varName)
+-                                ? 'animate-pulse bg-green-500/20 shadow-lg shadow-green-500/20'
+-                                : ''
+-                            )}
+-                          >
+-                            <div className="flex items-center justify-between">
+-                              <span className="font-semibold text-blue-400">{varName}</span>
+-                              <span className="text-foreground/70">{type}</span>
+-                            </div>
+-                            <div className="mt-1 text-lg font-bold text-foreground">
+-                              {String(value)}
+-                            </div>
+-                          </div>
+-                        )
+-                      )}
+-                    </div>
++                  {Object.entries(currentStep.variables).map(
++                    ([varName, { type, value }]) => (
++                      <div
++                        key={varName}
++                        className={cn(
++                          'rounded border border-border/50 bg-black/40 p-3 font-mono text-sm transition-all duration-500',
++                          animatingVars.has(varName)
++                            ? 'animate-pulse bg-green-500/20 shadow-lg shadow-green-500/20'
++                            : ''
++                        )}
++                      >
++                        <div className="flex items-center justify-between">
++                          <span className="font-semibold text-blue-400">{varName}</span>
++                          <span className="text-foreground/70">{type}</span>
++                        </div>
++                        <div className="mt-1 text-lg font-bold text-foreground">
++                          {String(value)}
++                        </div>
++                      </div>
++                    )
+                   )}
+                 </div>
+               </div>
+@@ -214,7 +257,7 @@ export function VariableTraceViz({
+ 
+             {/* Console Output */}
+             {cumulativeOutput && (
+-              <Card className="bg-card/50 backdrop-blur border-border/50">
++              <Card className="bg-card/30 border-border/30">
+                 <div className="p-4">
+                   <Badge variant="secondary" className="mb-3">
+                     Console Output
+@@ -252,8 +295,8 @@ export function VariableTraceViz({
+               </Button>
+             </div>
+           </div>
+-        </div>
+-      )}
+-    </div>
++        )}
++      </div>
++    </Card>
+   );
+ }
+diff --git a/lib/java-syntax-highlight.tsx b/lib/java-syntax-highlight.tsx
+new file mode 100644
+index 0000000..6732c24
+--- /dev/null
++++ b/lib/java-syntax-highlight.tsx
+@@ -0,0 +1,207 @@
++import React from 'react';
++
++type TokenType =
++  | 'keyword'
++  | 'type'
++  | 'string'
++  | 'comment'
++  | 'number'
++  | 'boolean'
++  | 'annotation'
++  | 'method'
++  | 'operator'
++  | 'plain';
++
++interface Token {
++  type: TokenType;
++  value: string;
++}
++
++const JAVA_KEYWORDS = new Set([
++  'abstract', 'assert', 'break', 'case', 'catch', 'class', 'const', 'continue',
++  'default', 'do', 'else', 'enum', 'extends', 'final', 'finally', 'for',
++  'goto', 'if', 'implements', 'import', 'instanceof', 'interface', 'native',
++  'new', 'package', 'private', 'protected', 'public', 'return', 'static',
++  'strictfp', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws',
++  'transient', 'try', 'void', 'volatile', 'while',
++]);
++
++const JAVA_TYPES = new Set([
++  'boolean', 'byte', 'char', 'double', 'float', 'int', 'long', 'short',
++  'String', 'Integer', 'Double', 'Float', 'Long', 'Short', 'Byte',
++  'Character', 'Boolean', 'Object', 'System', 'Scanner', 'Math',
++  'Array', 'ArrayList', 'List', 'Map', 'HashMap', 'Set', 'HashSet',
++  'Collections', 'Arrays', 'Random', 'StringBuilder',
++]);
++
++const TOKEN_CLASSES: Record<TokenType, string> = {
++  keyword: 'syn-kw',
++  type: 'syn-type',
++  string: 'syn-str',
++  comment: 'syn-cmt',
++  number: 'syn-num',
++  boolean: 'syn-bool',
++  annotation: 'syn-ann',
++  method: 'syn-fn',
++  operator: 'syn-op',
++  plain: '',
++};
++
++export function tokenizeJava(code: string): Token[] {
++  const tokens: Token[] = [];
++  let i = 0;
++
++  while (i < code.length) {
++    // Multi-line comment
++    if (code[i] === '/' && code[i + 1] === '*') {
++      const end = code.indexOf('*/', i + 2);
++      const value = end === -1 ? code.slice(i) : code.slice(i, end + 2);
++      tokens.push({ type: 'comment', value });
++      i += value.length;
++      continue;
++    }
++
++    // Single-line comment
++    if (code[i] === '/' && code[i + 1] === '/') {
++      const end = code.indexOf('\n', i);
++      const value = end === -1 ? code.slice(i) : code.slice(i, end);
++      tokens.push({ type: 'comment', value });
++      i += value.length;
++      continue;
++    }
++
++    // String literal
++    if (code[i] === '"') {
++      let j = i + 1;
++      while (j < code.length && code[j] !== '"' && code[j] !== '\n') {
++        if (code[j] === '\\') j++;
++        j++;
++      }
++      tokens.push({ type: 'string', value: code.slice(i, j + 1) });
++      i = j + 1;
++      continue;
++    }
++
++    // Char literal
++    if (code[i] === "'") {
++      let j = i + 1;
++      while (j < code.length && code[j] !== "'" && code[j] !== '\n') {
++        if (code[j] === '\\') j++;
++        j++;
++      }
++      tokens.push({ type: 'string', value: code.slice(i, j + 1) });
++      i = j + 1;
++      continue;
++    }
++
++    // Annotation
++    if (code[i] === '@' && i + 1 < code.length && /[a-zA-Z]/.test(code[i + 1])) {
++      let j = i + 1;
++      while (j < code.length && /\w/.test(code[j])) j++;
++      tokens.push({ type: 'annotation', value: code.slice(i, j) });
++      i = j;
++      continue;
++    }
++
++    // Number (including hex 0x, binary 0b, underscores, suffixes)
++    if (/\d/.test(code[i]) || (code[i] === '.' && i + 1 < code.length && /\d/.test(code[i + 1]))) {
++      let j = i;
++      if (code[j] === '0' && j + 1 < code.length && /[xXbBoO]/.test(code[j + 1])) {
++        j += 2;
++      }
++      while (j < code.length && /[\d.eE_a-fA-FxXbBoOlLdDfF+-]/.test(code[j])) j++;
++      tokens.push({ type: 'number', value: code.slice(i, j) });
++      i = j;
++      continue;
++    }
++
++    // Identifier / keyword / type / method
++    if (/[a-zA-Z_$]/.test(code[i])) {
++      let j = i;
++      while (j < code.length && /[\w$]/.test(code[j])) j++;
++      const word = code.slice(i, j);
++
++      // Peek ahead past whitespace for '(' to detect method calls
++      let k = j;
++      while (k < code.length && code[k] === ' ') k++;
++
++      if (word === 'true' || word === 'false' || word === 'null') {
++        tokens.push({ type: 'boolean', value: word });
++      } else if (JAVA_KEYWORDS.has(word)) {
++        tokens.push({ type: 'keyword', value: word });
++      } else if (JAVA_TYPES.has(word)) {
++        tokens.push({ type: 'type', value: word });
++      } else if (code[k] === '(') {
++        tokens.push({ type: 'method', value: word });
++      } else {
++        tokens.push({ type: 'plain', value: word });
++      }
++      i = j;
++      continue;
++    }
++
++    // Whitespace (keep newlines separate for line splitting)
++    if (code[i] === '\n') {
++      tokens.push({ type: 'plain', value: '\n' });
++      i++;
++      continue;
++    }
++    if (/[ \t\r]/.test(code[i])) {
++      let j = i;
++      while (j < code.length && /[ \t\r]/.test(code[j])) j++;
++      tokens.push({ type: 'plain', value: code.slice(i, j) });
++      i = j;
++      continue;
++    }
++
++    // Everything else (operators, punctuation, braces)
++    tokens.push({ type: 'operator', value: code[i] });
++    i++;
++  }
++
++  return tokens;
++}
++
++/** Render a tokenized line as highlighted React elements. */
++function renderTokens(tokens: Token[]): React.ReactNode[] {
++  return tokens.map((token, i) => {
++    const cls = TOKEN_CLASSES[token.type];
++    if (!cls) return <React.Fragment key={i}>{token.value}</React.Fragment>;
++    return (
++      <span key={i} className={cls}>
++        {token.value}
++      </span>
++    );
++  });
++}
++
++/** Highlight a single line of Java (no newlines expected). */
++export function highlightLine(line: string): React.ReactNode {
++  return <>{renderTokens(tokenizeJava(line))}</>;
++}
++
++/** Highlight a full Java snippet, returning an array of highlighted lines. */
++export function highlightLines(code: string): React.ReactNode[] {
++  const tokens = tokenizeJava(code);
++
++  // Split tokens at newline boundaries into per-line groups
++  const lines: Token[][] = [[]];
++  for (const token of tokens) {
++    if (token.value === '\n') {
++      lines.push([]);
++    } else if (token.value.includes('\n')) {
++      // Multi-line token (e.g. block comment) — split and replicate type
++      const parts = token.value.split('\n');
++      parts.forEach((part, idx) => {
++        if (idx > 0) lines.push([]);
++        if (part) lines[lines.length - 1].push({ type: token.type, value: part });
++      });
++    } else {
++      lines[lines.length - 1].push(token);
++    }
++  }
++
++  return lines.map((lineTokens, i) => (
++    <React.Fragment key={i}>{renderTokens(lineTokens)}</React.Fragment>
++  ));
++}
+diff --git a/scripts/generate-snippet-outputs.mjs b/scripts/generate-snippet-outputs.mjs
+new file mode 100644
+index 0000000..4215337
+--- /dev/null
++++ b/scripts/generate-snippet-outputs.mjs
+@@ -0,0 +1,132 @@
++#!/usr/bin/env node
++/**
++ * SSG Build Script: Compile and run Java snippets, capture outputs.
++ *
++ * Scans java-snippets/*.java, runs javac + java for each,
++ * writes generated/snippet-outputs.json with stdout/stderr/exitCode.
++ *
++ * Naming convention:
++ *   File: java-snippets/snippet-hello-world.java
++ *   Class inside: Must match filename converted to PascalCase
++ *   e.g., snippet-hello-world.java → class SnippetHelloWorld
++ *
++ * Usage: node scripts/generate-snippet-outputs.mjs
++ */
++
++import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
++import { execFile } from 'node:child_process';
++import { join, basename, parse as parsePath } from 'node:path';
++import { existsSync } from 'node:fs';
++import { promisify } from 'node:util';
++
++const exec = promisify(execFile);
++
++const SNIPPETS_DIR = join(import.meta.dirname, '..', 'java-snippets');
++const OUTPUT_FILE = join(import.meta.dirname, '..', 'generated', 'snippet-outputs.json');
++const TIMEOUT_MS = 10000;
++
++function toPascalCase(kebab) {
++  return kebab
++    .split('-')
++    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
++    .join('');
++}
++
++async function runJavaSnippet(filePath) {
++  const fileName = parsePath(filePath).name; // e.g., "snippet-hello-world"
++  const className = toPascalCase(fileName);
++  const dir = parsePath(filePath).dir;
++
++  const result = {
++    compiles: false,
++    stdout: '',
++    stderr: '',
++    exitCode: 1,
++  };
++
++  // Step 1: Compile
++  try {
++    const { stderr } = await exec('javac', [filePath], {
++      timeout: TIMEOUT_MS,
++      cwd: dir,
++    });
++    result.compiles = true;
++    if (stderr) result.stderr = stderr;
++  } catch (err) {
++    result.stderr = err.stderr || err.message;
++    result.exitCode = err.code || 1;
++    return result;
++  }
++
++  // Step 2: Execute
++  try {
++    const { stdout, stderr } = await exec('java', ['-cp', dir, className], {
++      timeout: TIMEOUT_MS,
++      cwd: dir,
++    });
++    result.stdout = stdout;
++    if (stderr) result.stderr += stderr;
++    result.exitCode = 0;
++  } catch (err) {
++    result.stdout = err.stdout || '';
++    result.stderr += (err.stderr || err.message);
++    result.exitCode = err.code || 1;
++  }
++
++  return result;
++}
++
++async function main() {
++  // Ensure directories exist
++  await mkdir(join(import.meta.dirname, '..', 'generated'), { recursive: true });
++
++  if (!existsSync(SNIPPETS_DIR)) {
++    console.log('No java-snippets/ directory found. Writing empty outputs.');
++    await writeFile(OUTPUT_FILE, JSON.stringify({}, null, 2));
++    return;
++  }
++
++  const files = (await readdir(SNIPPETS_DIR))
++    .filter(f => f.endsWith('.java'))
++    .sort();
++
++  if (files.length === 0) {
++    console.log('No .java files found in java-snippets/. Writing empty outputs.');
++    await writeFile(OUTPUT_FILE, JSON.stringify({}, null, 2));
++    return;
++  }
++
++  console.log(`Found ${files.length} Java snippet(s). Compiling and running...`);
++
++  const outputs = {};
++
++  for (const file of files) {
++    const filePath = join(SNIPPETS_DIR, file);
++    const snippetId = parsePath(file).name; // "snippet-hello-world"
++    process.stdout.write(`  ${snippetId} ... `);
++
++    try {
++      outputs[snippetId] = await runJavaSnippet(filePath);
++      const status = outputs[snippetId].compiles
++        ? (outputs[snippetId].exitCode === 0 ? '✓' : '✗ runtime error')
++        : '✗ compile error';
++      console.log(status);
++    } catch (err) {
++      console.log(`✗ ${err.message}`);
++      outputs[snippetId] = {
++        compiles: false,
++        stdout: '',
++        stderr: err.message,
++        exitCode: 1,
++      };
++    }
++  }
++
++  await writeFile(OUTPUT_FILE, JSON.stringify(outputs, null, 2));
++  console.log(`\nWrote ${Object.keys(outputs).length} snippet output(s) to generated/snippet-outputs.json`);
++}
++
++main().catch(err => {
++  console.error('Build script failed:', err);
++  process.exit(1);
++});
+-- 
+2.34.1
+
+
+From 543a7305754bdc514b5eda571f1ce2c95f20d38c Mon Sep 17 00:00:00 2001
+From: Brandon Gottshall <blgottshall@gmail.com>
+Date: Sat, 14 Feb 2026 02:52:40 +0000
+Subject: [PATCH 2/2] Add ?type= query param filter for testing specific
+ question types
+
+Navigate to /quiz?type=trace_variables to only see trace questions.
+Comma-separated for multiple: /quiz?type=trace_variables,predict_output
+Shows filter indicator banner when active.
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+---
+ app/quiz/page.tsx        |  7 ++++++-
+ app/quiz/quiz-client.tsx | 35 +++++++++++++++++++++++++++--------
+ 2 files changed, 33 insertions(+), 9 deletions(-)
+
+diff --git a/app/quiz/page.tsx b/app/quiz/page.tsx
+index 55d661a..935e140 100644
+--- a/app/quiz/page.tsx
++++ b/app/quiz/page.tsx
+@@ -1,5 +1,10 @@
++import { Suspense } from 'react';
+ import QuizClient from './quiz-client';
+ 
+ export default function QuizPage() {
+-  return <QuizClient />;
++  return (
++    <Suspense>
++      <QuizClient />
++    </Suspense>
++  );
+ }
+diff --git a/app/quiz/quiz-client.tsx b/app/quiz/quiz-client.tsx
+index 24de612..d06a543 100644
+--- a/app/quiz/quiz-client.tsx
++++ b/app/quiz/quiz-client.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import { useState, useCallback, useMemo, useEffect } from "react";
+-import { useRouter } from "next/navigation";
++import { useRouter, useSearchParams } from "next/navigation";
+ import { GameShell } from "@/components/game/game-shell";
+ import { FeedbackOverlay } from "@/components/game/feedback-overlay";
+ import { Button } from "@/components/ui/button";
+@@ -604,6 +604,17 @@ const HISTORY_STORAGE_KEY = 'cs1301-session-history';
+ 
+ export default function QuizClient() {
+   const router = useRouter();
++  const searchParams = useSearchParams();
++
++  // Dev/test filter: ?type=trace_variables (comma-separated for multiple)
++  const typeFilter = searchParams.get('type');
++  const filteredPool = useMemo(() => {
++    if (!typeFilter) return unifiedQuestionPool;
++    const types = new Set(typeFilter.split(','));
++    const filtered = unifiedQuestionPool.filter(q => types.has(q.type));
++    return filtered.length > 0 ? filtered : unifiedQuestionPool;
++  }, [typeFilter]);
++
+   const [initialized, setInitialized] = useState(false);
+   const [showResumePrompt, setShowResumePrompt] = useState(false);
+   const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
+@@ -673,7 +684,7 @@ export default function QuizClient() {
+       setShowResumePrompt(true);
+       setInitialized(true);
+     } else {
+-      const questionIds = unifiedQuestionPool.map(q => q.id);
++      const questionIds = filteredPool.map(q => q.id);
+       getSession(questionIds);
+       setCurrentQuestionId(getNextQuestion());
+       setStats(getSessionStats());
+@@ -683,12 +694,12 @@ export default function QuizClient() {
+     return () => {
+       saveSessionIfNewer();
+     };
+-  }, []);
++  }, [filteredPool]);
+ 
+   // Handle resuming or starting fresh
+   const handleResumeSession = useCallback(() => {
+     setShowResumePrompt(false);
+-    const questionIds = unifiedQuestionPool.map(q => q.id);
++    const questionIds = filteredPool.map(q => q.id);
+     reconcileSession(questionIds);
+     const nextId = getNextQuestion();
+     setCurrentQuestionId(nextId);
+@@ -697,7 +708,7 @@ export default function QuizClient() {
+       const nextProgress = getQuestionProgress(nextId);
+       setCurrentStreak(nextProgress?.streak || 0);
+     }
+-  }, []);
++  }, [filteredPool]);
+ 
+   const handleStartFresh = useCallback(() => {
+     setShowResumePrompt(false);
+@@ -705,12 +716,12 @@ export default function QuizClient() {
+     localStorage.removeItem(HISTORY_STORAGE_KEY);
+     setHistory([]);
+     resetSession();
+-    const questionIds = unifiedQuestionPool.map(q => q.id);
++    const questionIds = filteredPool.map(q => q.id);
+     getSession(questionIds);
+     setCurrentQuestionId(getNextQuestion());
+     setStats(getSessionStats());
+     setCurrentStreak(0);
+-  }, []);
++  }, [filteredPool]);
+ 
+   const currentQuestion = currentQuestionId ? getQuestionMap().get(currentQuestionId) : null;
+   const progress = getQuestionProgress(currentQuestionId || '');
+@@ -798,7 +809,7 @@ export default function QuizClient() {
+     clearSavedSession();
+     localStorage.removeItem(HISTORY_STORAGE_KEY);
+     resetSession();
+-    const questionIds = unifiedQuestionPool.map(q => q.id);
++    const questionIds = filteredPool.map(q => q.id);
+     getSession(questionIds);
+     setCurrentQuestionId(getNextQuestion());
+     setStats(getSessionStats());
+@@ -937,6 +948,14 @@ export default function QuizClient() {
+       title="Cram Session"
+       description={`${stats.graduated} / ${stats.total} mastered`}
+     >
++      {/* Dev filter indicator */}
++      {typeFilter && (
++        <div className="max-w-2xl mx-auto mb-2 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono flex items-center gap-2">
++          <AlertTriangle className="w-3 h-3" />
++          Filter: {typeFilter} ({filteredPool.length} questions)
++        </div>
++      )}
++
+       {/* Progress bar */}
+       <div className="max-w-2xl mx-auto mb-6">
+         <Progress value={progressPercent} className="h-2" />
+-- 
+2.34.1
+

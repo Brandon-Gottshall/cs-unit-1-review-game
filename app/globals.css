@@ -219,3 +219,26 @@
 .focus-ring {
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
+
+/* ── Syntax highlighting tokens ─────────────────────────────── */
+/* Light mode */
+.syn-kw   { color: oklch(0.45 0.3 300); }          /* keywords – purple */
+.syn-type { color: oklch(0.45 0.2 250); }           /* types – blue */
+.syn-str  { color: oklch(0.45 0.15 145); }          /* strings – green */
+.syn-cmt  { color: oklch(0.55 0.02 270); font-style: italic; } /* comments – gray */
+.syn-num  { color: oklch(0.45 0.15 200); }          /* numbers – teal */
+.syn-bool { color: oklch(0.5 0.2 30); }             /* booleans – orange */
+.syn-ann  { color: oklch(0.5 0.18 85); }            /* annotations – gold */
+.syn-fn   { color: oklch(0.45 0.15 85); }           /* methods – dark gold */
+.syn-op   { color: oklch(0.35 0.02 270); }          /* operators – dark gray */
+
+/* Dark mode */
+.dark .syn-kw   { color: oklch(0.75 0.2 300); }     /* keywords – light purple */
+.dark .syn-type { color: oklch(0.72 0.15 230); }    /* types – light blue */
+.dark .syn-str  { color: oklch(0.78 0.14 145); }    /* strings – light green */
+.dark .syn-cmt  { color: oklch(0.5 0.02 270); font-style: italic; } /* comments */
+.dark .syn-num  { color: oklch(0.8 0.12 195); }     /* numbers – cyan */
+.dark .syn-bool { color: oklch(0.75 0.17 55); }     /* booleans – orange */
+.dark .syn-ann  { color: oklch(0.8 0.15 85); }      /* annotations – yellow */
+.dark .syn-fn   { color: oklch(0.85 0.12 85); }     /* methods – light yellow */
+.dark .syn-op   { color: oklch(0.7 0.01 270); }     /* operators – light gray */

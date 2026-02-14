@@ -1,2 +1,4 @@
-node_modules\n.next\n.next-build
+node_modules
+.next
+.next-build
 .vercel

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { parseJava, type DiagnosticError } from '@/lib/java-parser';
 import { cn } from '@/lib/utils';
 import { AlertTriangle } from 'lucide-react';
+import { highlightLines as syntaxHighlight } from '@/lib/java-syntax-highlight';
 
 interface JavaCodeEditorProps {
   /** Initial code to display */
@@ -127,28 +128,41 @@ export function JavaCodeEditor({
           })}
         </div>
 
-        {/* Code textarea (overlaid on pre for coloring) */}
+        {/* Code display / editor */}
         <div className="flex-1 relative overflow-auto">
-          <textarea
-            ref={textareaRef}
-            value={code}
-            onChange={handleChange}
-            onKeyDown={readOnly ? undefined : handleKeyDown}
-            readOnly={readOnly}
-            spellCheck={false}
-            autoCapitalize="off"
-            autoCorrect="off"
-            className={cn(
-              'w-full h-full p-3 font-mono text-sm leading-6 bg-transparent resize-none outline-none',
-              'text-foreground caret-primary',
-              readOnly && 'cursor-default opacity-90',
-            )}
-            style={{
-              fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
-              minHeight: `${lines.length * 24 + 24}px`,
-              tabSize: 2,
-            }}
-          />
+          {readOnly ? (
+            <div
+              className="w-full h-full p-3 font-mono text-sm leading-6 text-foreground/90 whitespace-pre"
+              style={{
+                fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+                minHeight: `${lines.length * 24 + 24}px`,
+                tabSize: 2,
+              }}
+            >
+              {syntaxHighlight(code).map((highlighted, i) => (
+                <div key={i} className="h-6">{highlighted}</div>
+              ))}
+            </div>
+          ) : (
+            <textarea
+              ref={textareaRef}
+              value={code}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              className={cn(
+                'w-full h-full p-3 font-mono text-sm leading-6 bg-transparent resize-none outline-none',
+                'text-foreground caret-primary',
+              )}
+              style={{
+                fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+                minHeight: `${lines.length * 24 + 24}px`,
+                tabSize: 2,
+              }}
+            />
+          )}
         </div>
       </div>
 

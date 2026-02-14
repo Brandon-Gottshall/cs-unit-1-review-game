@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { GameShell } from "@/components/game/game-shell";
 import { FeedbackOverlay } from "@/components/game/feedback-overlay";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,8 @@ import {
   type CSQuestionType,
   shuffleArray,
 } from "@/lib/cs-game-data";
-import { JavaCodeEditor, VariableTraceViz, CodeOutputComparison } from "@/components/interactive";
+import { JavaCodeEditor, VariableTraceViz, CodeOutputComparison, WriteProgramChallenge } from "@/components/interactive";
+import { highlightLines } from "@/lib/java-syntax-highlight";
 import {
   getSession,
   resetSession,
@@ -60,6 +61,7 @@ const typeInfo: Record<CSQuestionType, { label: string; icon: React.ReactNode; c
   valid_invalid: { label: "Valid?", icon: <HelpCircle className="w-4 h-4" />, color: "bg-orange-500/20 text-orange-400" },
   match_definition: { label: "Match", icon: <BookOpen className="w-4 h-4" />, color: "bg-emerald-500/20 text-emerald-400" },
   code_analysis: { label: "Analyze", icon: <FileText className="w-4 h-4" />, color: "bg-teal-500/20 text-teal-400" },
+  write_program: { label: "Write", icon: <Terminal className="w-4 h-4" />, color: "bg-pink-500/20 text-pink-400" },
 };
 
 // Lazy-build a map for quick lookup
@@ -408,9 +410,11 @@ function QuestionCard({ question, streak, onAnswer }: QuestionCardProps) {
         <div className="space-y-2">
           <h2 className="text-xl font-semibold leading-relaxed">{question.question}</h2>
           {question.formula && (
-            <p className="text-sm text-muted-foreground font-mono bg-muted/50 px-3 py-1.5 rounded inline-block">
-              {question.formula}
-            </p>
+            <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
+              <code>{highlightLines(question.formula).map((line, i) => (
+                <div key={i}>{line}</div>
+              ))}</code>
+            </pre>
           )}
         </div>
 
@@ -601,6 +605,17 @@ const HISTORY_STORAGE_KEY = 'cs1301-session-history';
 
 export default function QuizClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Dev/test filter: ?type=trace_variables (comma-separated for multiple)
+  const typeFilter = searchParams.get('type');
+  const filteredPool = useMemo(() => {
+    if (!typeFilter) return unifiedQuestionPool;
+    const types = new Set(typeFilter.split(','));
+    const filtered = unifiedQuestionPool.filter(q => types.has(q.type));
+    return filtered.length > 0 ? filtered : unifiedQuestionPool;
+  }, [typeFilter]);
+
   const [initialized, setInitialized] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
@@ -670,7 +685,7 @@ export default function QuizClient() {
       setShowResumePrompt(true);
       setInitialized(true);
     } else {
-      const questionIds = unifiedQuestionPool.map(q => q.id);
+      const questionIds = filteredPool.map(q => q.id);
       getSession(questionIds);
       setCurrentQuestionId(getNextQuestion());
       setStats(getSessionStats());
@@ -680,12 +695,12 @@ export default function QuizClient() {
     return () => {
       saveSessionIfNewer();
     };
-  }, []);
+  }, [filteredPool]);
 
   // Handle resuming or starting fresh
   const handleResumeSession = useCallback(() => {
     setShowResumePrompt(false);
-    const questionIds = unifiedQuestionPool.map(q => q.id);
+    const questionIds = filteredPool.map(q => q.id);
     reconcileSession(questionIds);
     const nextId = getNextQuestion();
     setCurrentQuestionId(nextId);
@@ -694,7 +709,7 @@ export default function QuizClient() {
       const nextProgress = getQuestionProgress(nextId);
       setCurrentStreak(nextProgress?.streak || 0);
     }
-  }, []);
+  }, [filteredPool]);
 
   const handleStartFresh = useCallback(() => {
     setShowResumePrompt(false);
@@ -702,12 +717,12 @@ export default function QuizClient() {
     localStorage.removeItem(HISTORY_STORAGE_KEY);
     setHistory([]);
     resetSession();
-    const questionIds = unifiedQuestionPool.map(q => q.id);
+    const questionIds = filteredPool.map(q => q.id);
     getSession(questionIds);
     setCurrentQuestionId(getNextQuestion());
     setStats(getSessionStats());
     setCurrentStreak(0);
-  }, []);
+  }, [filteredPool]);
 
   const currentQuestion = currentQuestionId ? getQuestionMap().get(currentQuestionId) : null;
   const progress = getQuestionProgress(currentQuestionId || '');
@@ -795,7 +810,7 @@ export default function QuizClient() {
     clearSavedSession();
     localStorage.removeItem(HISTORY_STORAGE_KEY);
     resetSession();
-    const questionIds = unifiedQuestionPool.map(q => q.id);
+    const questionIds = filteredPool.map(q => q.id);
     getSession(questionIds);
     setCurrentQuestionId(getNextQuestion());
     setStats(getSessionStats());
@@ -934,6 +949,14 @@ export default function QuizClient() {
       title="Cram Session"
       description={`${stats.graduated} / ${stats.total} mastered`}
     >
+      {/* Dev filter indicator */}
+      {typeFilter && (
+        <div className="max-w-2xl mx-auto mb-2 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono flex items-center gap-2">
+          <AlertTriangle className="w-3 h-3" />
+          Filter: {typeFilter} ({filteredPool.length} questions)
+        </div>
+      )}
+
       {/* Progress bar */}
       <div className="max-w-2xl mx-auto mb-6">
         <Progress value={progressPercent} className="h-2" />
@@ -1004,6 +1027,17 @@ export default function QuizClient() {
               />
             </CardContent>
           </Card>
+        ) : currentQuestion && currentQuestion.type === 'write_program' && currentQuestion.interactive?.programData ? (
+          <WriteProgramChallenge
+            key={currentQuestionId}
+            filename={currentQuestion.interactive.programData.filename}
+            description={currentQuestion.question}
+            expectedOutput={currentQuestion.interactive.programData.expectedOutput}
+            sampleSolution={currentQuestion.interactive.programData.sampleSolution}
+            requiredElements={currentQuestion.interactive.programData.requiredElements}
+            hints={currentQuestion.interactive.programData.hints}
+            onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
+          />
         ) : currentQuestion ? (
           <QuestionCard
             key={currentQuestionId}
@@ -1123,9 +1157,11 @@ export default function QuizClient() {
               <h2 className="text-xl font-semibold">{reviewQuestion.question}</h2>
 
               {reviewQuestion.formula && (
-                <p className="text-sm text-muted-foreground font-mono bg-muted/50 px-3 py-1.5 rounded inline-block">
-                  {reviewQuestion.formula}
-                </p>
+                <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
+                  <code>{highlightLines(reviewQuestion.formula).map((line, i) => (
+                    <div key={i}>{line}</div>
+                  ))}</code>
+                </pre>
               )}
 
               {/* Show all answer options */}

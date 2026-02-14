@@ -23,7 +23,8 @@ export type CSQuestionType =
   | 'complete_code'
   | 'valid_invalid'
   | 'match_definition'
-  | 'code_analysis';
+  | 'code_analysis'
+  | 'write_program';
 
 export interface VariableTraceData {
   code: string;
@@ -42,11 +43,21 @@ export interface ErrorData {
   errorLine: number;
 }
 
+export interface ProgramData {
+  filename: string;          // e.g., "HelloWorld.java"
+  description: string;       // problem statement
+  expectedOutput: string;    // what correct code should print
+  sampleSolution: string;    // reference solution to show after submission
+  requiredElements?: string[]; // structural checks, e.g. ["public class", "public static void main"]
+  hints?: string[];           // progressive hints
+}
+
 export interface InteractiveData {
   code?: string;
   variantData?: VariableTraceData;
   outputData?: CodeOutputData;
   errorData?: ErrorData;
+  programData?: ProgramData;
 }
 
 export interface CSUnifiedQuestion {
@@ -165,7 +176,7 @@ const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
     type: 'vocabulary',
     question: 'What is a program in computer science?',
     correctAnswer: 'A sequence of instructions that tells the computer what to do',
-    distractors: ['A data structure', 'A memory location', 'An error message'],
+    distractors: ['A tool that translates code into machine language', 'A graphical interface for interacting with the computer', 'A single instruction that the CPU executes directly'],
     explanation: 'A program is a set of instructions written in a programming language that a computer executes to accomplish a specific task.',
   },
   {
@@ -175,7 +186,7 @@ const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
     type: 'vocabulary',
     question: 'What is an algorithm?',
     correctAnswer: 'A step-by-step procedure for solving a problem',
-    distractors: ['A data type', 'A variable name', 'A compiler feature'],
+    distractors: ['A programming language used to write software', 'A tool that checks code for syntax errors', 'A specific method that runs when a program starts'],
     explanation: 'An algorithm is a finite sequence of well-defined instructions to accomplish a task or solve a problem. It is the logic behind a program.',
   },
   {
@@ -193,11 +204,11 @@ const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
     chapter: 1,
     section: '1.3',
     type: 'code_analysis',
-    question: 'Which statement is true about this Java program structure?',
+    question: 'What is the purpose of String[] args in this program\'s main method?',
     formula: 'public class HelloWorld {\n  public static void main(String[] args) {\n    System.out.println("Hello World");\n  }\n}',
-    correctAnswer: 'This program will execute and print "Hello World" to the console',
-    distractors: ['This program will not compile', 'The class name must be different', 'The main method must be private'],
-    explanation: 'This is valid Java program structure with a public class, static main method that accepts String[] args, and proper syntax.',
+    correctAnswer: 'It allows the program to accept command-line arguments',
+    distractors: ['It stores the text that gets printed to the console', 'It defines the return type of the main method', 'It specifies which class the program belongs to'],
+    explanation: 'The String[] args parameter allows the program to receive command-line arguments when executed. Even if not used, it must be present in the main method signature.',
   },
 ];
 
@@ -228,10 +239,10 @@ const ch1IdeConcepts: CSUnifiedQuestion[] = [
     chapter: 1,
     section: '1.4',
     type: 'true_false',
-    question: 'An IDE combines text editing, compilation, and debugging tools in one application.',
-    correctAnswer: 'True',
-    distractors: ['False'],
-    explanation: 'IDEs integrate multiple tools (editor, compiler, debugger, etc.) into a single application to streamline the development process.',
+    question: 'A text editor like Notepad is considered an IDE because it can open .java files.',
+    correctAnswer: 'False',
+    distractors: ['True'],
+    explanation: 'A text editor alone is not an IDE. An IDE integrates multiple tools — editor, compiler, debugger — into one application.',
   },
   {
     id: 'ch1-ide-004',
@@ -240,7 +251,7 @@ const ch1IdeConcepts: CSUnifiedQuestion[] = [
     type: 'vocabulary',
     question: 'Which of the following is a popular Java IDE?',
     correctAnswer: 'IntelliJ IDEA',
-    distractors: ['Microsoft Word', 'Notepad', 'Adobe Photoshop'],
+    distractors: ['Visual Studio (without extensions)', 'Android SDK Manager', 'Git Bash'],
     explanation: 'IntelliJ IDEA, Eclipse, and NetBeans are popular IDEs for Java development. Microsoft Word, Notepad, and Adobe Photoshop are not development tools.',
   },
 ];
@@ -262,10 +273,10 @@ const ch1ProgrammingBasics: CSUnifiedQuestion[] = [
     chapter: 1,
     section: '1.5',
     type: 'true_false',
-    question: 'Java is case-sensitive, meaning "System", "system", and "SYSTEM" are different identifiers.',
-    correctAnswer: 'True',
-    distractors: ['False'],
-    explanation: 'Java is case-sensitive. "System" (the class), "system", and "SYSTEM" are all different identifiers.',
+    question: 'In Java, the variables myAge, MyAge, and myage all refer to the same variable.',
+    correctAnswer: 'False',
+    distractors: ['True'],
+    explanation: 'Java is case-sensitive. myAge, MyAge, and myage are three distinct identifiers.',
   },
   {
     id: 'ch1-basics-003',
@@ -283,10 +294,10 @@ const ch1ProgrammingBasics: CSUnifiedQuestion[] = [
     section: '1.5',
     type: 'code_analysis',
     question: 'What is the output of this code?',
-    formula: 'public class Test {\n  public static void main(String[] args) {\n    int x = 10;\n    System.out.println(x);\n  }\n}',
+    formula: 'public class Test {\n  public static void main(String[] args) {\n    int x = 10;\n    int y = x;\n    x = 20;\n    System.out.println(y);\n  }\n}',
     correctAnswer: '10',
-    distractors: ['x', 'int', 'Error: x is not defined'],
-    explanation: 'The variable x is declared and assigned the value 10, then printed to the console. The output is: 10',
+    distractors: ['20', '30', 'Error: y is undefined'],
+    explanation: 'When y = x executes, the value 10 is copied to y. Changing x afterward does not affect y. Output: 10',
   },
 ];
 
@@ -299,7 +310,7 @@ const ch1CommentsWhitespace: CSUnifiedQuestion[] = [
     type: 'vocabulary',
     question: 'What is the purpose of comments in Java code?',
     correctAnswer: 'To explain code to programmers without affecting program execution',
-    distractors: ['To declare variables', 'To store data', 'To execute code'],
+    distractors: ['To prevent certain lines of code from being compiled permanently', 'To provide instructions that the JVM executes at runtime', 'To define the data types of variables in the program'],
     explanation: 'Comments are explanatory notes for humans and are ignored by the compiler. They improve code readability and maintainability.',
   },
   {
@@ -341,20 +352,20 @@ const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
     chapter: 1,
     section: '1.7',
     type: 'vocabulary',
-    question: 'What is a syntax error in Java?',
-    correctAnswer: 'An error in code that violates the rules of Java language syntax',
-    distractors: ['An error that occurs when the program runs', 'A logical mistake in the algorithm', 'A warning message'],
-    explanation: 'Syntax errors are violations of the Java grammar rules. The compiler detects them and prevents the program from running until they are fixed.',
+    question: 'Which of the following is an example of a syntax error?',
+    correctAnswer: 'Writing System.out.Println instead of System.out.println',
+    distractors: ['Using the wrong formula to calculate an average', 'Dividing a number by zero during program execution', 'Printing the wrong variable to the console'],
+    explanation: 'Syntax errors violate Java grammar rules. System.out.Println (capital P) does not exist — the correct method is println (lowercase p).',
   },
   {
     id: 'ch1-errors-002',
     chapter: 1,
     section: '1.7',
     type: 'vocabulary',
-    question: 'What is a runtime error?',
-    correctAnswer: 'An error that occurs while the program is executing',
-    distractors: ['An error detected by the compiler', 'A typo in the code', 'A warning message'],
-    explanation: 'Runtime errors occur during program execution and cause the program to crash or behave unexpectedly.',
+    question: 'Which of the following would cause a runtime error?',
+    correctAnswer: 'Attempting to divide an integer by zero',
+    distractors: ['Forgetting a semicolon at the end of a statement', 'Using the wrong variable in a calculation', 'Misspelling the keyword "public" as "pubic"'],
+    explanation: 'Runtime errors occur during program execution. Division by zero compiles successfully but crashes when executed.',
   },
   {
     id: 'ch1-errors-003',
@@ -362,15 +373,15 @@ const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
     section: '1.7',
     type: 'identify_error',
     question: 'What error exists in this code?',
-    formula: 'public static void main(String[] args) {\n  int x = 5\n  System.out.println(x);\n}',
-    correctAnswer: 'Missing semicolon after x = 5',
-    distractors: ['Missing parentheses in main', 'Wrong data type', 'Variable x not declared'],
-    explanation: 'Every Java statement must end with a semicolon. Line 2 should be: int x = 5;',
+    formula: 'public static void main(String[] args) {\n  int x = 10;\n  int y = 0;\n  System.out.println(x / y);\n}',
+    correctAnswer: 'Runtime error — division by zero',
+    distractors: ['Syntax error — missing semicolon', 'Logic error — wrong operator used', 'Syntax error — y cannot be assigned 0'],
+    explanation: 'This code compiles successfully but crashes during execution because dividing by zero is undefined.',
     interactive: {
       errorData: {
-        code: 'public static void main(String[] args) {\n  int x = 5\n  System.out.println(x);\n}',
-        errorType: 'Syntax Error - Missing semicolon',
-        errorLine: 2,
+        code: 'public static void main(String[] args) {\n  int x = 10;\n  int y = 0;\n  System.out.println(x / y);\n}',
+        errorType: 'Runtime Error - ArithmeticException: / by zero',
+        errorLine: 4,
       },
     },
   },
@@ -379,10 +390,10 @@ const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
     chapter: 1,
     section: '1.7',
     type: 'vocabulary',
-    question: 'What is a logic error?',
-    correctAnswer: 'An error where the program runs but produces incorrect results',
-    distractors: ['A syntax error caught by the compiler', 'A runtime error that crashes the program', 'A missing semicolon'],
-    explanation: 'Logic errors are mistakes in the algorithm or problem-solving approach. The program compiles and runs but gives wrong results.',
+    question: 'A student writes a program to calculate the average of three numbers but uses addition instead of division. What type of error is this?',
+    correctAnswer: 'Logic error — the program runs but produces wrong results',
+    distractors: ['Syntax error — the compiler will catch it', 'Runtime error — the program will crash', 'Compilation error — the code is invalid Java'],
+    explanation: 'Logic errors are mistakes in the algorithm. The code is syntactically correct and runs without crashing, but the output is incorrect because the logic is flawed.',
   },
 ];
 
@@ -464,11 +475,11 @@ const ch2VariablesAssignments: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.4',
     type: 'code_analysis',
-    question: 'What happens when you declare multiple variables in one statement?',
-    formula: 'int x = 5, y = 10, z = 15;',
-    correctAnswer: 'All three variables are declared and initialized in one statement',
-    distractors: ['Only x is declared', 'This causes a syntax error', 'Only y and z are declared'],
-    explanation: 'You can declare multiple variables of the same type in one statement by separating them with commas.',
+    question: 'What is wrong with this variable declaration?',
+    formula: 'int x = 5, double y = 10.0;',
+    correctAnswer: 'You cannot declare variables of different types in one statement',
+    distractors: ['The variable names are too short', 'You must initialize all variables to the same value', 'The semicolon should be replaced with a colon'],
+    explanation: 'When declaring multiple variables in one statement, they must all be of the same type. Use separate statements for different types.',
   },
 ];
 
@@ -479,10 +490,10 @@ const ch2Identifiers: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.2',
     type: 'vocabulary',
-    question: 'What is an identifier in Java?',
-    correctAnswer: 'A name given to a variable, method, or class',
-    distractors: ['A number or value', 'A data type', 'A reserved keyword'],
-    explanation: 'Identifiers are user-defined names for variables, methods, and classes. They must follow Java naming rules.',
+    question: 'Which of the following is NOT a valid Java identifier?',
+    correctAnswer: '3rdPlace',
+    distractors: ['_score', '$total', 'playerName'],
+    explanation: 'Identifiers cannot start with a digit. They must begin with a letter, underscore (_), or dollar sign ($).',
   },
   {
     id: 'ch2-ident-002',
@@ -499,10 +510,10 @@ const ch2Identifiers: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.2',
     type: 'vocabulary',
-    question: 'Which of the following is a valid identifier in Java?',
-    correctAnswer: '_myVariable',
-    distractors: ['2variable', 'my-variable', 'my variable'],
-    explanation: 'Valid identifiers can contain letters, digits, underscores, and dollar signs (but cannot start with a digit or contain hyphens/spaces).',
+    question: 'Which of the following is NOT a valid Java identifier?',
+    correctAnswer: 'first-name',
+    distractors: ['firstName', '_first_name', '$firstName'],
+    explanation: 'Identifiers cannot contain hyphens. Valid identifiers use letters, digits, underscores, and dollar signs only.',
   },
   {
     id: 'ch2-ident-004',
@@ -534,14 +545,14 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
     section: '2.5',
     type: 'predict_output',
     question: 'What does this code print?',
-    formula: 'int x = 7;\nint y = 3;\nSystem.out.println(x + y);',
-    correctAnswer: '10',
-    distractors: ['73', '21', '4'],
-    explanation: 'The + operator adds the two integers: 7 + 3 = 10.',
+    formula: 'int x = 2 + 3 * 4;\nSystem.out.println(x);',
+    correctAnswer: '14',
+    distractors: ['20', '24', '9'],
+    explanation: 'Following order of operations (PEMDAS), multiplication is performed before addition: 2 + (3 * 4) = 2 + 12 = 14.',
     interactive: {
       outputData: {
-        code: 'int x = 7;\nint y = 3;\nSystem.out.println(x + y);',
-        expectedOutput: '10',
+        code: 'int x = 2 + 3 * 4;\nSystem.out.println(x);',
+        expectedOutput: '14',
       },
     },
   },
@@ -551,14 +562,14 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
     section: '2.5',
     type: 'predict_output',
     question: 'What is printed?',
-    formula: 'int a = 15;\nint b = 4;\nSystem.out.println(a - b);',
-    correctAnswer: '11',
-    distractors: ['19', '-11', '12'],
-    explanation: 'Subtraction: 15 - 4 = 11.',
+    formula: 'int a = 20;\nint b = 10 - 3 * 2;\nSystem.out.println(b);',
+    correctAnswer: '4',
+    distractors: ['14', '7', '8'],
+    explanation: 'Following order of operations: 10 - (3 * 2) = 10 - 6 = 4.',
     interactive: {
       outputData: {
-        code: 'int a = 15;\nint b = 4;\nSystem.out.println(a - b);',
-        expectedOutput: '11',
+        code: 'int a = 20;\nint b = 10 - 3 * 2;\nSystem.out.println(b);',
+        expectedOutput: '4',
       },
     },
   },
@@ -568,14 +579,14 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
     section: '2.5',
     type: 'predict_output',
     question: 'What is the output?',
-    formula: 'int x = 6;\nint y = 7;\nSystem.out.println(x * y);',
-    correctAnswer: '42',
-    distractors: ['67', '13', '36'],
-    explanation: 'Multiplication: 6 * 7 = 42.',
+    formula: 'int x = 10;\nx = x + 3;\nx = x * 2;\nSystem.out.println(x);',
+    correctAnswer: '26',
+    distractors: ['16', '23', '36'],
+    explanation: 'First: x = 10 + 3 = 13. Then: x = 13 * 2 = 26.',
     interactive: {
       outputData: {
-        code: 'int x = 6;\nint y = 7;\nSystem.out.println(x * y);',
-        expectedOutput: '42',
+        code: 'int x = 10;\nx = x + 3;\nx = x * 2;\nSystem.out.println(x);',
+        expectedOutput: '26',
       },
     },
   },
@@ -599,14 +610,14 @@ const ch2FloatingPoint: CSUnifiedQuestion[] = [
     section: '2.6',
     type: 'predict_output',
     question: 'What does this code print?',
-    formula: 'double x = 3.5;\ndouble y = 2.5;\nSystem.out.println(x + y);',
-    correctAnswer: '6.0',
-    distractors: ['6', '6.0.0', '35 25'],
-    explanation: 'Adding two double values: 3.5 + 2.5 = 6.0.',
+    formula: 'int a = 7;\ndouble b = 2.0;\nSystem.out.println(a / b);',
+    correctAnswer: '3.5',
+    distractors: ['3', '3.0', '4.0'],
+    explanation: 'When dividing an int by a double, the result is a double: 7 / 2.0 = 3.5 (not integer division).',
     interactive: {
       outputData: {
-        code: 'double x = 3.5;\ndouble y = 2.5;\nSystem.out.println(x + y);',
-        expectedOutput: '6.0',
+        code: 'int a = 7;\ndouble b = 2.0;\nSystem.out.println(a / b);',
+        expectedOutput: '3.5',
       },
     },
   },
@@ -616,15 +627,15 @@ const ch2FloatingPoint: CSUnifiedQuestion[] = [
     section: '2.6',
     type: 'trace_variables',
     question: 'What is the value of result?',
-    formula: 'double price = 19.99;\ndouble tax = 1.50;\ndouble result = price + tax;',
-    correctAnswer: 'result = 21.49',
-    distractors: ['result = 20.49', 'result = 21.00', 'result = 1.99'],
-    explanation: '19.99 + 1.50 = 21.49',
+    formula: 'int items = 3;\ndouble price = 4.50;\ndouble result = items * price;',
+    correctAnswer: 'result = 13.5',
+    distractors: ['result = 13', 'result = 12.0', 'Error: cannot multiply int and double'],
+    explanation: 'When multiplying int and double, the int is promoted to double: 3 * 4.50 = 13.5',
     interactive: {
       variantData: {
-        code: 'double price = 19.99;\ndouble tax = 1.50;\ndouble result = price + tax;',
-        finalValues: { result: 21.49 },
-        steps: ['price = 19.99', 'tax = 1.50', 'result = 19.99 + 1.50 = 21.49'],
+        code: 'int items = 3;\ndouble price = 4.50;\ndouble result = items * price;',
+        finalValues: { result: 13.5 },
+        steps: ['items = 3', 'price = 4.50', 'result = 3 * 4.50 = 13.5'],
       },
     },
   },
@@ -647,10 +658,10 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.7',
     type: 'vocabulary',
-    question: 'What is integer division in Java?',
-    correctAnswer: 'Division that discards the fractional part and returns only the whole number quotient',
-    distractors: ['Division that rounds to the nearest integer', 'Division that always uses floating-point', 'Division that returns only the remainder'],
-    explanation: 'When dividing two integers, Java discards any remainder. For example, 7 / 2 = 3 (not 3.5).',
+    question: 'When does integer division (truncation) occur in Java?',
+    correctAnswer: 'When both operands of the division are int types',
+    distractors: ['Whenever the / operator is used', 'When the result is stored in an int variable', 'When Math.floor() is applied to the result'],
+    explanation: 'Integer division only occurs when both operands are integers. If either operand is a double, floating-point division is performed.',
   },
   {
     id: 'ch2-divmod-002',
@@ -658,14 +669,14 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
     section: '2.7',
     type: 'predict_output',
     question: 'What is printed?',
-    formula: 'int x = 17;\nint y = 5;\nSystem.out.println(x / y);',
-    correctAnswer: '3',
-    distractors: ['3.4', '5', '4'],
-    explanation: 'Integer division: 17 / 5 = 3 (remainder discarded).',
+    formula: 'int result = 1 / 2;\nSystem.out.println(result);',
+    correctAnswer: '0',
+    distractors: ['0.5', '1', '0.0'],
+    explanation: 'Integer division: 1 / 2 = 0 (the fractional part is discarded, not rounded).',
     interactive: {
       outputData: {
-        code: 'int x = 17;\nint y = 5;\nSystem.out.println(x / y);',
-        expectedOutput: '3',
+        code: 'int result = 1 / 2;\nSystem.out.println(result);',
+        expectedOutput: '0',
       },
     },
   },
@@ -685,14 +696,14 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
     section: '2.7',
     type: 'predict_output',
     question: 'What does this code output?',
-    formula: 'int a = 20;\nint b = 6;\nSystem.out.println(a % b);',
-    correctAnswer: '2',
-    distractors: ['3', '6', '20'],
-    explanation: 'Modulo operation: 20 % 6 = 2 (remainder when 20 is divided by 6).',
+    formula: 'int x = 25;\nint y = 7;\nSystem.out.println(x / y + " r " + x % y);',
+    correctAnswer: '3 r 4',
+    distractors: ['3.57 r 4', '4 r 3', '3 r 3'],
+    explanation: 'Integer division: 25 / 7 = 3. Modulo: 25 % 7 = 4. Result: "3 r 4".',
     interactive: {
       outputData: {
-        code: 'int a = 20;\nint b = 6;\nSystem.out.println(a % b);',
-        expectedOutput: '2',
+        code: 'int x = 25;\nint y = 7;\nSystem.out.println(x / y + " r " + x % y);',
+        expectedOutput: '3 r 4',
       },
     },
   },
@@ -705,9 +716,9 @@ const ch2TypeConversions: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.8',
     type: 'vocabulary',
-    question: 'What is type casting in Java?',
-    correctAnswer: 'Converting a value from one data type to another',
-    distractors: ['Declaring a new variable', 'Comparing two values', 'Creating a constant'],
+    question: 'In which situation is an explicit cast required in Java?',
+    correctAnswer: 'Assigning a double value to an int variable',
+    distractors: ['Assigning an int value to a double variable', 'Assigning an int literal to an int variable', 'Printing a double value with System.out.println'],
     explanation: 'Type casting allows you to convert values between compatible types. It can be implicit (widening) or explicit (narrowing).',
   },
   {
@@ -715,9 +726,9 @@ const ch2TypeConversions: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.8',
     type: 'valid_invalid',
-    question: 'Is this code valid? int x = 5.5;',
-    correctAnswer: 'Invalid - double value assigned to int variable',
-    distractors: ['Valid', 'Invalid - missing semicolon', 'Invalid - wrong variable name'],
+    question: 'Which of the following assignments will cause a compilation error?',
+    correctAnswer: 'int result = 3.0 / 1;',
+    distractors: ['double result = 10 / 3;', 'int result = (int) 9.7;', 'double result = 5;'],
     explanation: 'You cannot directly assign a double to an int. You must cast: int x = (int) 5.5;',
   },
   {
@@ -726,14 +737,14 @@ const ch2TypeConversions: CSUnifiedQuestion[] = [
     section: '2.8',
     type: 'predict_output',
     question: 'What is printed?',
-    formula: 'int result = (int) 7.8;\nSystem.out.println(result);',
-    correctAnswer: '7',
-    distractors: ['7.8', '8', '0'],
-    explanation: 'Casting 7.8 to int truncates (removes) the decimal part, leaving 7.',
+    formula: 'double x = 9.99;\nint y = (int) x;\nSystem.out.println(y);',
+    correctAnswer: '9',
+    distractors: ['10', '9.99', '9.0'],
+    explanation: 'Casting 9.99 to int truncates (removes) the decimal part, leaving 9.',
     interactive: {
       outputData: {
-        code: 'int result = (int) 7.8;\nSystem.out.println(result);',
-        expectedOutput: '7',
+        code: 'double x = 9.99;\nint y = (int) x;\nSystem.out.println(y);',
+        expectedOutput: '9',
       },
     },
   },
@@ -756,9 +767,9 @@ const ch2Constants: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.9',
     type: 'vocabulary',
-    question: 'What is a constant in Java?',
-    correctAnswer: 'A variable whose value cannot be changed after initialization',
-    distractors: ['A method that returns a value', 'A variable declared in a method', 'A data type like int or double'],
+    question: 'What is the benefit of declaring a variable as final in Java?',
+    correctAnswer: 'It prevents the variable from being accidentally reassigned later in the code',
+    distractors: ['It makes the variable accessible from any class', 'It allows the variable to store larger values', 'It improves the program\'s execution speed significantly'],
     explanation: 'Constants are declared with the "final" keyword and maintain the same value throughout the program.',
   },
   {
@@ -777,15 +788,15 @@ const ch2Constants: CSUnifiedQuestion[] = [
     section: '2.9',
     type: 'identify_error',
     question: 'What is wrong with this code?',
-    formula: 'final int MAX = 100;\nMAX = 200;',
-    correctAnswer: 'Cannot assign a value to a final variable',
-    distractors: ['Missing semicolon', 'Wrong data type', 'MAX is not declared'],
+    formula: 'final double TAX_RATE = 0.08;\ndouble price = 100.0;\nTAX_RATE = price * 0.10;',
+    correctAnswer: 'TAX_RATE was declared as final and cannot be reassigned',
+    distractors: ['TAX_RATE must be declared as int, not double', 'The calculation price * 0.10 is invalid', 'Variables in ALL_CAPS cannot store decimal values'],
     explanation: 'Once a final variable is assigned, its value cannot be changed. Attempting to do so causes a compiler error.',
     interactive: {
       errorData: {
-        code: 'final int MAX = 100;\nMAX = 200;',
+        code: 'final double TAX_RATE = 0.08;\ndouble price = 100.0;\nTAX_RATE = price * 0.10;',
         errorType: 'Cannot assign to final variable',
-        errorLine: 2,
+        errorLine: 3,
       },
     },
   },
@@ -808,10 +819,10 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.10',
     type: 'vocabulary',
-    question: 'What is Math.sqrt() used for?',
-    correctAnswer: 'To calculate the square root of a number',
-    distractors: ['To calculate the square of a number', 'To calculate the absolute value', 'To generate a random number'],
-    explanation: 'Math.sqrt(x) returns the square root of x. For example, Math.sqrt(16) returns 4.0.',
+    question: 'What is the return type of Math.sqrt()?',
+    correctAnswer: 'double',
+    distractors: ['int', 'float', 'long'],
+    explanation: 'Math.sqrt(x) returns the square root of x as a double. For example, Math.sqrt(16) returns 4.0.',
   },
   {
     id: 'ch2-math-002',
@@ -819,14 +830,14 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
     section: '2.10',
     type: 'predict_output',
     question: 'What does this code print?',
-    formula: 'double x = Math.abs(-15.5);\nSystem.out.println(x);',
-    correctAnswer: '15.5',
-    distractors: ['-15.5', '15', '1'],
-    explanation: 'Math.abs() returns the absolute value (magnitude without sign). Math.abs(-15.5) = 15.5.',
+    formula: 'int a = -3;\nint b = -7;\nSystem.out.println(Math.abs(a + b));',
+    correctAnswer: '10',
+    distractors: ['-10', '4', '-4'],
+    explanation: 'Math.abs() returns the absolute value (magnitude without sign). Math.abs(-3 + -7) = Math.abs(-10) = 10.',
     interactive: {
       outputData: {
-        code: 'double x = Math.abs(-15.5);\nSystem.out.println(x);',
-        expectedOutput: '15.5',
+        code: 'int a = -3;\nint b = -7;\nSystem.out.println(Math.abs(a + b));',
+        expectedOutput: '10',
       },
     },
   },
@@ -836,14 +847,14 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
     section: '2.10',
     type: 'predict_output',
     question: 'What is the output?',
-    formula: 'double result = Math.pow(2, 3);\nSystem.out.println(result);',
-    correctAnswer: '8.0',
-    distractors: ['6', '5', '2'],
-    explanation: 'Math.pow(x, y) calculates x to the power of y. Math.pow(2, 3) = 2^3 = 8.',
+    formula: 'double result = Math.pow(3, 3) + Math.pow(2, 4);\nSystem.out.println(result);',
+    correctAnswer: '43.0',
+    distractors: ['27.0', '12.0', '43'],
+    explanation: 'Math.pow(x, y) calculates x to the power of y. Math.pow(3, 3) + Math.pow(2, 4) = 27 + 16 = 43.0.',
     interactive: {
       outputData: {
-        code: 'double result = Math.pow(2, 3);\nSystem.out.println(result);',
-        expectedOutput: '8.0',
+        code: 'double result = Math.pow(3, 3) + Math.pow(2, 4);\nSystem.out.println(result);',
+        expectedOutput: '43.0',
       },
     },
   },
@@ -852,10 +863,10 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.10',
     type: 'vocabulary',
-    question: 'What does Math.max() do?',
-    correctAnswer: 'Returns the larger of two numbers',
-    distractors: ['Returns the smaller of two numbers', 'Returns the average of two numbers', 'Returns the product of two numbers'],
-    explanation: 'Math.max(a, b) returns the larger value. Math.max(10, 20) returns 20.',
+    question: 'What does Math.min(Math.max(3, 7), 5) return?',
+    correctAnswer: '5',
+    distractors: ['3', '7', '15'],
+    explanation: 'Math.max(3, 7) returns 7, then Math.min(7, 5) returns 5.',
   },
 ];
 
@@ -866,10 +877,10 @@ const ch2Binary: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.11',
     type: 'vocabulary',
-    question: 'What is binary?',
-    correctAnswer: 'A number system using only two digits: 0 and 1',
-    distractors: ['A number system using 10 digits', 'A number system using 16 digits', 'A type of Java variable'],
-    explanation: 'Binary is base-2. Computers use binary to represent all data internally.',
+    question: 'Why do computers use binary (base-2) instead of decimal (base-10)?',
+    correctAnswer: 'Because electronic circuits have two states: on (1) and off (0)',
+    distractors: ['Because binary numbers are smaller than decimal numbers', 'Because binary calculations are more accurate than decimal', 'Because Java was designed to only use binary'],
+    explanation: 'Binary is base-2. Computers use binary because digital circuits can easily represent two states (on/off, high voltage/low voltage), making binary the natural choice for representing data electronically.',
   },
   {
     id: 'ch2-binary-002',
@@ -910,10 +921,10 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.12',
     type: 'vocabulary',
-    question: 'What is the difference between char and String in Java?',
-    correctAnswer: 'char stores a single character, String stores multiple characters',
-    distractors: ['They are the same thing', 'String is smaller than char', 'char is immutable but String is mutable'],
-    explanation: 'char is a primitive type for a single character (e.g., \'A\'). String is a reference type for text (e.g., "Hello").',
+    question: 'Which of the following is a correctly declared char variable?',
+    correctAnswer: 'char letter = \'A\';',
+    distractors: ['char letter = "A";', 'char letter = \'AB\';', 'String letter = \'A\';'],
+    explanation: 'char uses single quotes for a single character (e.g., \'A\'). Double quotes are for String. A char cannot hold multiple characters.',
   },
   {
     id: 'ch2-chars-002',
@@ -931,14 +942,14 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     section: '2.12',
     type: 'predict_output',
     question: 'What is printed?',
-    formula: 'String greeting = "Hello";\nString name = "Alice";\nSystem.out.println(greeting + " " + name);',
-    correctAnswer: 'Hello Alice',
-    distractors: ['Hello Alice greetingname', 'HelloAlice', 'greeting name'],
-    explanation: 'String concatenation with + joins the strings together.',
+    formula: 'int age = 21;\nString message = "Age: " + age + 1;\nSystem.out.println(message);',
+    correctAnswer: 'Age: 211',
+    distractors: ['Age: 22', 'Age: 21 1', 'Error: cannot add int to String'],
+    explanation: 'String concatenation happens left to right. "Age: " + 21 creates "Age: 21", then + 1 concatenates "1" as a string, resulting in "Age: 211".',
     interactive: {
       outputData: {
-        code: 'String greeting = "Hello";\nString name = "Alice";\nSystem.out.println(greeting + " " + name);',
-        expectedOutput: 'Hello Alice',
+        code: 'int age = 21;\nString message = "Age: " + age + 1;\nSystem.out.println(message);',
+        expectedOutput: 'Age: 211',
       },
     },
   },
@@ -947,11 +958,79 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.12',
     type: 'code_analysis',
-    question: 'What is the type of the variable message?',
-    formula: 'String message = "Welcome to Java";',
-    correctAnswer: 'String',
-    distractors: ['char', 'int', 'double'],
-    explanation: 'The variable message is of type String because it is initialized with a string literal.',
+    question: 'What is the result of "Hello".length() in Java?',
+    formula: 'System.out.println("Hello".length());',
+    correctAnswer: '5',
+    distractors: ['4', '6', 'Error: Strings do not have a length method'],
+    explanation: 'The .length() method returns the number of characters in a String. "Hello" has 5 characters.',
+  },
+  {
+    id: 'ch2-output-001',
+    chapter: 2,
+    section: '2.12',
+    type: 'predict_output',
+    question: 'What does this code print? (use separate lines if needed)',
+    formula: 'System.out.println("Hello");\nSystem.out.println("World");',
+    correctAnswer: 'Hello\nWorld',
+    distractors: ['HelloWorld', 'Hello World', 'Hello\\nWorld'],
+    explanation: 'Each println() prints its argument and then moves to a new line. So "Hello" and "World" appear on separate lines.',
+    interactive: {
+      outputData: {
+        code: 'System.out.println("Hello");\nSystem.out.println("World");',
+        expectedOutput: 'Hello\nWorld',
+      },
+    },
+  },
+  {
+    id: 'ch2-output-002',
+    chapter: 2,
+    section: '2.12',
+    type: 'predict_output',
+    question: 'What does this code print? (use separate lines if needed)',
+    formula: 'System.out.print("Hello");\nSystem.out.println("World");',
+    correctAnswer: 'HelloWorld',
+    distractors: ['Hello World', 'Hello\\nWorld', 'Hello\nWorld'],
+    explanation: 'print() does NOT add a newline, so "World" appears on the same line right after "Hello". println() adds a newline after "World".',
+    interactive: {
+      outputData: {
+        code: 'System.out.print("Hello");\nSystem.out.println("World");',
+        expectedOutput: 'HelloWorld',
+      },
+    },
+  },
+  {
+    id: 'ch2-output-003',
+    chapter: 2,
+    section: '2.12',
+    type: 'predict_output',
+    question: 'What does this code print? (use separate lines if needed)',
+    formula: 'System.out.print("A");\nSystem.out.print("B");\nSystem.out.println("C");\nSystem.out.println("D");',
+    correctAnswer: 'ABC\nD',
+    distractors: ['ABCD', 'A\nB\nC\nD', 'A B C\nD'],
+    explanation: 'print() keeps output on the same line. The first println() prints "C" and adds a newline. Then "D" appears on the next line.',
+    interactive: {
+      outputData: {
+        code: 'System.out.print("A");\nSystem.out.print("B");\nSystem.out.println("C");\nSystem.out.println("D");',
+        expectedOutput: 'ABC\nD',
+      },
+    },
+  },
+  {
+    id: 'ch2-output-004',
+    chapter: 2,
+    section: '2.12',
+    type: 'predict_output',
+    question: 'What does this code print? (use separate lines if needed)',
+    formula: 'int x = 5;\nint y = 10;\nSystem.out.println(x);\nSystem.out.println(y);\nSystem.out.println(x + y);',
+    correctAnswer: '5\n10\n15',
+    distractors: ['5 10 15', '51015', '5\n10\n510'],
+    explanation: 'Each println() outputs its value on a separate line. The third call prints x + y = 15 (addition, not concatenation, since both are int).',
+    interactive: {
+      outputData: {
+        code: 'int x = 5;\nint y = 10;\nSystem.out.println(x);\nSystem.out.println(y);\nSystem.out.println(x + y);',
+        expectedOutput: '5\n10\n15',
+      },
+    },
   },
 ];
 
@@ -982,20 +1061,20 @@ const ch2NumericTypes: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.13',
     type: 'true_false',
-    question: 'The long type is used for integer values larger than int can hold.',
+    question: 'A long literal in Java must end with the letter L (e.g., 100L).',
     correctAnswer: 'True',
     distractors: ['False'],
-    explanation: 'long is a 64-bit integer type, providing a larger range than int (32-bit).',
+    explanation: 'To specify a long literal in Java, you must append L or l to the number (e.g., 100L). Without the L suffix, the compiler treats the number as an int, which can cause compilation errors if the value exceeds int range.',
   },
   {
     id: 'ch2-numtype-004',
     chapter: 2,
     section: '2.13',
     type: 'vocabulary',
-    question: 'Which type should you use for simple whole number values like ages or counts?',
-    correctAnswer: 'int',
-    distractors: ['double', 'float', 'long'],
-    explanation: 'int is the standard choice for whole numbers in a typical range. It is efficient and widely used.',
+    question: 'A student needs to store the population of Earth (approximately 8 billion). Which type should they use?',
+    correctAnswer: 'long',
+    distractors: ['int', 'double', 'byte'],
+    explanation: 'The maximum value for int is approximately 2.1 billion, which is too small for Earth\'s population (8 billion). You must use long, which can hold values up to about 9 quintillion.',
   },
 ];
 
@@ -1006,10 +1085,10 @@ const ch2Overflow: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.14',
     type: 'vocabulary',
-    question: 'What is integer overflow?',
-    correctAnswer: 'When a value exceeds the maximum value that a numeric type can store',
-    distractors: ['When a program uses too much memory', 'When a variable is not initialized', 'When a string is too long'],
-    explanation: 'Integer overflow occurs when an arithmetic operation produces a result larger than the type can represent.',
+    question: 'What value does an int variable hold after integer overflow occurs?',
+    correctAnswer: 'It wraps around to a negative number (the minimum int value)',
+    distractors: ['It stays at the maximum integer value', 'It becomes zero', 'The program throws an error and stops'],
+    explanation: 'When an int overflows past its maximum value (2,147,483,647), it wraps around to the minimum value (-2,147,483,648). Java does not throw an exception for integer overflow.',
   },
   {
     id: 'ch2-overflow-002',
@@ -1028,7 +1107,7 @@ const ch2Overflow: CSUnifiedQuestion[] = [
     type: 'vocabulary',
     question: 'How do you prevent integer overflow?',
     correctAnswer: 'Use a larger numeric type (like long) for values that might exceed int range',
-    distractors: ['Use a smaller numeric type', 'Use string concatenation', 'Use the Math.abs() method'],
+    distractors: ['Add a try-catch block to handle the overflow exception', 'Use the Math.max() method to cap the value', 'Declare the variable as final to prevent value changes'],
     explanation: 'To prevent overflow, choose a numeric type with a larger range, such as long instead of int.',
   },
   {
@@ -1037,10 +1116,10 @@ const ch2Overflow: CSUnifiedQuestion[] = [
     section: '2.14',
     type: 'code_analysis',
     question: 'What could be a problem with this code?',
-    formula: 'int x = Integer.MAX_VALUE;\nx = x + 1;',
-    correctAnswer: 'Integer overflow occurs',
-    distractors: ['Missing semicolon', 'x is not initialized', 'Integer.MAX_VALUE is undefined'],
-    explanation: 'Adding 1 to the maximum int value causes overflow, wrapping to Integer.MIN_VALUE.',
+    formula: 'int bigNum = 2000000000;\nint result = bigNum + bigNum;',
+    correctAnswer: 'Integer overflow — the sum exceeds int\'s maximum value',
+    distractors: ['The variable names are invalid', 'You cannot add two int variables together', 'The result will be stored as a double automatically'],
+    explanation: '2,000,000,000 + 2,000,000,000 = 4,000,000,000, which exceeds int\'s maximum value (2,147,483,647). This causes overflow, wrapping to a large negative number.',
   },
 ];
 
@@ -1051,10 +1130,10 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.15',
     type: 'vocabulary',
-    question: 'What class is used to generate random numbers in Java?',
-    correctAnswer: 'Random',
-    distractors: ['Math', 'System', 'Scanner'],
-    explanation: 'The java.util.Random class is used to generate pseudo-random numbers in Java.',
+    question: 'Which import statement is needed to use the Random class?',
+    correctAnswer: 'import java.util.Random;',
+    distractors: ['import java.math.Random;', 'import java.lang.Random;', 'No import is needed — Random is in java.lang'],
+    explanation: 'The Random class is in the java.util package, so you must import it with: import java.util.Random;',
   },
   {
     id: 'ch2-random-002',
@@ -1071,11 +1150,11 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
     chapter: 2,
     section: '2.15',
     type: 'code_analysis',
-    question: 'How would you generate a random integer between 1 and 10 (inclusive)?',
-    formula: 'int randomNum = (int) (Math.random() * 10) + 1;',
-    correctAnswer: 'Multiply Math.random() by the range, cast to int, and add 1',
-    distractors: ['Use Math.randomInt(1, 10)', 'Use Random.nextInt()', 'Use Math.random() directly'],
-    explanation: 'Math.random() * 10 gives 0.0 to 9.999..., cast to int gives 0-9, then add 1 for 1-10.',
+    question: 'What range of values can this expression produce?',
+    formula: 'int num = (int) (Math.random() * 6) + 1;',
+    correctAnswer: '1 to 6 (inclusive)',
+    distractors: ['0 to 6 (inclusive)', '1 to 7 (inclusive)', '0 to 5 (inclusive)'],
+    explanation: 'Math.random() * 6 gives 0.0 to 5.999..., cast to int gives 0-5, then add 1 to shift the range to 1-6 (like a dice roll).',
   },
   {
     id: 'ch2-random-004',
@@ -1092,6 +1171,152 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
 // ============================================
 // UNIFIED QUESTION POOL EXPORT
 // ============================================
+
+// ============================================
+// WRITE PROGRAM CHALLENGES
+// ============================================
+const writeProgramChallenges: CSUnifiedQuestion[] = [
+  {
+    id: 'wp-001',
+    chapter: 1,
+    section: '1.5',
+    type: 'write_program',
+    question: 'Write a complete Java program in HelloWorld.java that prints "Hello, World!" to the console.',
+    correctAnswer: 'A complete HelloWorld.java program that prints "Hello, World!"',
+    explanation: 'Every Java program needs a class whose name matches the filename, and a main method as the entry point.',
+    keyFacts: [
+      'Class name must match filename (without .java)',
+      'main method signature: public static void main(String[] args)',
+      'Use System.out.println() to print with newline',
+    ],
+    interactive: {
+      programData: {
+        filename: 'HelloWorld.java',
+        description: 'Write a complete Java program that prints "Hello, World!" to the console.',
+        expectedOutput: 'Hello, World!',
+        sampleSolution: `// HelloWorld.java\npublic class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
+        requiredElements: ['public class HelloWorld', 'public static void main', 'System.out.println'],
+        hints: [
+          'Start with: public class HelloWorld {',
+          'Inside the class, add: public static void main(String[] args) {',
+          'Use System.out.println("Hello, World!"); to print',
+        ],
+      },
+    },
+  },
+  {
+    id: 'wp-002',
+    chapter: 2,
+    section: '2.4',
+    type: 'write_program',
+    question: 'Write a complete Java program in AreaCalculator.java that calculates the area of a circle with radius 5.0 and prints the result.',
+    correctAnswer: 'A program that calculates and prints the area of a circle with radius 5.0',
+    explanation: 'Area of a circle = Math.PI * radius * radius. Use Math.PI for the constant.',
+    keyFacts: [
+      'Math.PI provides the value of pi',
+      'Area formula: Math.PI * r * r',
+      'Use double for floating-point values',
+    ],
+    interactive: {
+      programData: {
+        filename: 'AreaCalculator.java',
+        description: 'Write a complete Java program that declares a double variable radius = 5.0, calculates the area of a circle (π × r²), and prints the result.',
+        expectedOutput: '78.53981633974483',
+        sampleSolution: `// AreaCalculator.java\npublic class AreaCalculator {\n    public static void main(String[] args) {\n        double radius = 5.0;\n        double area = Math.PI * radius * radius;\n        System.out.println(area);\n    }\n}`,
+        requiredElements: ['public class AreaCalculator', 'public static void main', 'double', 'Math.PI'],
+        hints: [
+          'Declare: double radius = 5.0;',
+          'Calculate: double area = Math.PI * radius * radius;',
+          'Print: System.out.println(area);',
+        ],
+      },
+    },
+  },
+  {
+    id: 'wp-003',
+    chapter: 2,
+    section: '2.1',
+    type: 'write_program',
+    question: 'Write a complete Java program in SwapValues.java that declares int a = 10 and int b = 20, swaps their values using a temp variable, and prints both.',
+    correctAnswer: 'A program that swaps two integer values and prints them',
+    explanation: 'Swapping requires a temporary variable: temp = a; a = b; b = temp;',
+    keyFacts: [
+      'Cannot swap without a temporary variable (or XOR trick)',
+      'Order matters: save one value before overwriting',
+      'This is a classic variable manipulation pattern',
+    ],
+    interactive: {
+      programData: {
+        filename: 'SwapValues.java',
+        description: 'Write a complete Java program that declares int a = 10 and int b = 20, swaps their values using a temporary variable, then prints a and b (each on their own line).',
+        expectedOutput: '20\n10',
+        sampleSolution: `// SwapValues.java\npublic class SwapValues {\n    public static void main(String[] args) {\n        int a = 10;\n        int b = 20;\n        int temp = a;\n        a = b;\n        b = temp;\n        System.out.println(a);\n        System.out.println(b);\n    }\n}`,
+        requiredElements: ['public class SwapValues', 'public static void main', 'int a', 'int b'],
+        hints: [
+          'You need a third variable to hold one value during the swap',
+          'int temp = a; then a = b; then b = temp;',
+          'Print each value with System.out.println()',
+        ],
+      },
+    },
+  },
+  {
+    id: 'wp-004',
+    chapter: 2,
+    section: '2.8',
+    type: 'write_program',
+    question: 'Write a complete Java program in TempConverter.java that converts 98.6°F to Celsius and prints the result.',
+    correctAnswer: 'A program that converts 98.6°F to Celsius',
+    explanation: 'Celsius = (Fahrenheit - 32) * 5.0 / 9.0. Use 5.0/9.0 not 5/9 to avoid integer division.',
+    keyFacts: [
+      'Formula: C = (F - 32) × 5/9',
+      'Must use 5.0/9.0 (not 5/9) to get floating-point division',
+      'Integer division 5/9 equals 0 in Java!',
+    ],
+    interactive: {
+      programData: {
+        filename: 'TempConverter.java',
+        description: 'Write a complete Java program that converts 98.6 degrees Fahrenheit to Celsius using the formula C = (F - 32) × 5/9 and prints the Celsius value.',
+        expectedOutput: '37.0',
+        sampleSolution: `// TempConverter.java\npublic class TempConverter {\n    public static void main(String[] args) {\n        double fahrenheit = 98.6;\n        double celsius = (fahrenheit - 32) * 5.0 / 9.0;\n        System.out.println(celsius);\n    }\n}`,
+        requiredElements: ['public class TempConverter', 'public static void main', 'double'],
+        hints: [
+          'Declare: double fahrenheit = 98.6;',
+          'Use 5.0/9.0, not 5/9 (integer division trap!)',
+          'double celsius = (fahrenheit - 32) * 5.0 / 9.0;',
+        ],
+      },
+    },
+  },
+  {
+    id: 'wp-005',
+    chapter: 2,
+    section: '2.15',
+    type: 'write_program',
+    question: 'Write a complete Java program in MathDemo.java that prints the square root of 144 and 2 raised to the power of 10.',
+    correctAnswer: 'A program using Math.sqrt() and Math.pow()',
+    explanation: 'Java provides Math.sqrt() and Math.pow() for common mathematical operations.',
+    keyFacts: [
+      'Math.sqrt(x) returns the square root as a double',
+      'Math.pow(base, exponent) returns base^exponent as a double',
+      'Both are static methods in the Math class (no import needed)',
+    ],
+    interactive: {
+      programData: {
+        filename: 'MathDemo.java',
+        description: 'Write a complete Java program that prints Math.sqrt(144) on the first line and Math.pow(2, 10) on the second line.',
+        expectedOutput: '12.0\n1024.0',
+        sampleSolution: `// MathDemo.java\npublic class MathDemo {\n    public static void main(String[] args) {\n        System.out.println(Math.sqrt(144));\n        System.out.println(Math.pow(2, 10));\n    }\n}`,
+        requiredElements: ['public class MathDemo', 'public static void main', 'Math.sqrt', 'Math.pow'],
+        hints: [
+          'Math.sqrt() and Math.pow() are in java.lang.Math (auto-imported)',
+          'System.out.println(Math.sqrt(144)); prints the square root',
+          'System.out.println(Math.pow(2, 10)); prints 2^10',
+        ],
+      },
+    },
+  },
+];
 
 export const unifiedQuestionPool: CSUnifiedQuestion[] = [
   ...ch1ComputerComponents,
@@ -1114,6 +1339,7 @@ export const unifiedQuestionPool: CSUnifiedQuestion[] = [
   ...ch2NumericTypes,
   ...ch2Overflow,
   ...ch2RandomNumbers,
+  ...writeProgramChallenges,
 ];
 
 export function shuffleArray<T>(arr: T[]): T[] {

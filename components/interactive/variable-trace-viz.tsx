@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { shuffleArray } from '@/lib/cs-game-data';
+import { highlightLine } from '@/lib/java-syntax-highlight';
 
 export interface TraceStep {
   line: number;
@@ -39,15 +41,39 @@ export function VariableTraceViz({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [animatingVars, setAnimatingVars] = useState<Set<string>>(new Set());
+  const [attempt, setAttempt] = useState(1);
+  const [eliminatedOptions, setEliminatedOptions] = useState<Set<string>>(new Set());
 
   const currentStep = steps[currentStepIndex];
   const codeLines = (code || '').split('\n');
 
+  // Build shuffled MC options that include the correct answer
+  const options = useMemo(() => {
+    if (distractors && distractors.length > 0) {
+      return shuffleArray([correctAnswer, ...distractors.slice(0, 3)]);
+    }
+    return null;
+  }, [correctAnswer, distractors]);
+
+  const allowTwoGuesses = options && options.length > 2;
+
   const handleSubmitAnswer = () => {
+    if (!userAnswer) return;
     const isCorrect = userAnswer.trim() === correctAnswer.trim();
-    setAnswerCorrect(isCorrect);
-    setAnswered(true);
-    onAnswer(isCorrect, isCorrect ? 0 : 1);
+
+    if (isCorrect) {
+      setAnswerCorrect(true);
+      setAnswered(true);
+      onAnswer(true, attempt === 1 ? 0 : 1);
+    } else if (allowTwoGuesses && attempt === 1) {
+      setEliminatedOptions(prev => new Set([...prev, userAnswer]));
+      setUserAnswer('');
+      setAttempt(2);
+    } else {
+      setAnswerCorrect(false);
+      setAnswered(true);
+      onAnswer(false, 2);
+    }
   };
 
   const handleNextStep = () => {
@@ -74,29 +100,81 @@ export function VariableTraceViz({
     .join('\n');
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Question Prompt */}
-      <div className="space-y-3">
-        <h3 className="text-lg font-semibold text-foreground">{questionPrompt}</h3>
+    <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur border-border/50">
+      <div className="p-6 space-y-6">
+        {/* Badge row */}
+        <div className="flex items-center justify-between">
+          <Badge variant="outline" className="gap-1.5 text-cyan-400 border-cyan-500/30 bg-cyan-500/10">
+            <span className="text-sm">🔍</span>
+            Trace
+          </Badge>
+        </div>
 
+        {/* Question */}
+        <h2 className="text-xl font-semibold leading-relaxed">{questionPrompt}</h2>
+
+        {/* Code — ALWAYS visible so student can read it before answering */}
+        <div className="overflow-x-auto rounded-lg border border-border/50 bg-black/40">
+          <pre className="font-mono text-sm leading-relaxed text-foreground/90">
+            {codeLines.map((line, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'px-4 py-1',
+                  answered && currentStep?.line === idx + 1
+                    ? 'bg-yellow-500/20 font-semibold text-yellow-300'
+                    : ''
+                )}
+              >
+                <span className="mr-4 inline-block w-8 text-right text-foreground/40">
+                  {idx + 1}
+                </span>
+                {highlightLine(line)}
+              </div>
+            ))}
+          </pre>
+        </div>
+
+        {/* Answer section */}
         {!answered && (
           <div className="space-y-3">
-            {distractors ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {distractors.map((option) => (
-                  <Button
-                    key={option}
-                    variant={userAnswer === option ? 'default' : 'outline'}
-                    onClick={() => setUserAnswer(option)}
-                    className="font-mono"
-                  >
-                    {option}
-                  </Button>
-                ))}
+            {/* Two-guess indicator */}
+            {attempt === 2 && (
+              <div className="flex items-center gap-2 text-amber-400 text-sm">
+                <span>⚠</span>
+                <span>Second chance — one option eliminated</span>
+              </div>
+            )}
+
+            {options ? (
+              /* MC options — full-width stacked like QuestionCard */
+              <div className="space-y-2">
+                {options.map((option) => {
+                  const isEliminated = eliminatedOptions.has(option);
+                  const isSelected = userAnswer === option;
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => !isEliminated && setUserAnswer(option)}
+                      disabled={isEliminated}
+                      className={cn(
+                        'w-full text-left px-4 py-3 rounded-lg border transition-all font-mono text-sm',
+                        isEliminated
+                          ? 'opacity-40 cursor-not-allowed border-border/30 bg-muted/20 line-through'
+                          : isSelected
+                            ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/50'
+                            : 'border-border/50 bg-card/30 hover:bg-card/60 hover:border-border'
+                      )}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
               </div>
             ) : (
+              /* Free-text input */
               <Input
-                placeholder="Enter your answer"
+                placeholder="Enter your answer (e.g. x = 15, y = 10)"
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 className="font-mono"
@@ -105,6 +183,7 @@ export function VariableTraceViz({
                 }}
               />
             )}
+
             <Button
               onClick={handleSubmitAnswer}
               disabled={!userAnswer}
@@ -115,10 +194,11 @@ export function VariableTraceViz({
           </div>
         )}
 
+        {/* Answer feedback */}
         {answered && (
           <div
             className={cn(
-              'rounded-lg border px-4 py-2 font-mono text-sm',
+              'rounded-lg border px-4 py-3 font-mono text-sm',
               answerCorrect
                 ? 'border-green-500/50 bg-green-500/10 text-green-400'
                 : 'border-red-500/50 bg-red-500/10 text-red-400'
@@ -137,76 +217,39 @@ export function VariableTraceViz({
             )}
           </div>
         )}
-      </div>
 
-      {answered && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Code Panel */}
-          <Card className="bg-card/50 backdrop-blur border-border/50">
-            <div className="p-4">
-              <Badge variant="secondary" className="mb-3">
-                Code
-              </Badge>
-              <div className="overflow-x-auto rounded border border-border/50 bg-black/40">
-                <pre className="font-mono text-xs leading-relaxed text-foreground/90">
-                  {codeLines.map((line, idx) => (
-                    <div
-                      key={idx}
-                      className={cn(
-                        'px-4 py-1',
-                        currentStep.line === idx + 1
-                          ? 'bg-yellow-500/20 font-semibold text-yellow-300'
-                          : ''
-                      )}
-                    >
-                      <span className="mr-4 inline-block w-8 text-right text-foreground/50">
-                        {idx + 1}
-                      </span>
-                      {line}
-                    </div>
-                  ))}
-                </pre>
-              </div>
-            </div>
-          </Card>
+        {/* Post-answer: step-through debugger */}
+        {answered && steps.length > 0 && Object.keys(currentStep?.variables || {}).length > 0 && (
+          <div className="space-y-4 pt-2 border-t border-border/30">
+            <p className="text-sm text-muted-foreground">Step through the execution:</p>
 
-          {/* Variable State Panel */}
-          <div className="space-y-4">
-            {/* Variables Table */}
-            <Card className="bg-card/50 backdrop-blur border-border/50">
+            {/* Variable State */}
+            <Card className="bg-card/30 border-border/30">
               <div className="p-4">
                 <Badge variant="secondary" className="mb-3">
                   Variable State (Step {currentStepIndex + 1} of {steps.length})
                 </Badge>
                 <div className="space-y-2">
-                  {Object.entries(currentStep.variables).length === 0 ? (
-                    <p className="text-sm text-foreground/50 italic">
-                      No variables initialized yet
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {Object.entries(currentStep.variables).map(
-                        ([varName, { type, value }]) => (
-                          <div
-                            key={varName}
-                            className={cn(
-                              'rounded border border-border/50 bg-black/40 p-3 font-mono text-sm transition-all duration-500',
-                              animatingVars.has(varName)
-                                ? 'animate-pulse bg-green-500/20 shadow-lg shadow-green-500/20'
-                                : ''
-                            )}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-blue-400">{varName}</span>
-                              <span className="text-foreground/70">{type}</span>
-                            </div>
-                            <div className="mt-1 text-lg font-bold text-foreground">
-                              {String(value)}
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
+                  {Object.entries(currentStep.variables).map(
+                    ([varName, { type, value }]) => (
+                      <div
+                        key={varName}
+                        className={cn(
+                          'rounded border border-border/50 bg-black/40 p-3 font-mono text-sm transition-all duration-500',
+                          animatingVars.has(varName)
+                            ? 'animate-pulse bg-green-500/20 shadow-lg shadow-green-500/20'
+                            : ''
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-blue-400">{varName}</span>
+                          <span className="text-foreground/70">{type}</span>
+                        </div>
+                        <div className="mt-1 text-lg font-bold text-foreground">
+                          {String(value)}
+                        </div>
+                      </div>
+                    )
                   )}
                 </div>
               </div>
@@ -214,7 +257,7 @@ export function VariableTraceViz({
 
             {/* Console Output */}
             {cumulativeOutput && (
-              <Card className="bg-card/50 backdrop-blur border-border/50">
+              <Card className="bg-card/30 border-border/30">
                 <div className="p-4">
                   <Badge variant="secondary" className="mb-3">
                     Console Output
@@ -252,8 +295,8 @@ export function VariableTraceViz({
               </Button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </Card>
   );
 }
