@@ -52,11 +52,11 @@ describe('lib/java-parser exports', () => {
 describe('lib/spaced-repetition exports', () => {
   it('exports required symbols', async () => {
     const mod = await import('../lib/spaced-repetition');
-    expect(mod.getNextQuestion).toBeTypeOf('function');
+    expect(mod.getNextConcept).toBeTypeOf('function');
     expect(mod.recordAnswer).toBeTypeOf('function');
     expect(mod.getSessionStats).toBeTypeOf('function');
     expect(mod.resetSession).toBeTypeOf('function');
-    expect(mod.getQuestionProgress).toBeTypeOf('function');
+    expect(mod.getConceptProgress).toBeTypeOf('function');
   });
 });
 

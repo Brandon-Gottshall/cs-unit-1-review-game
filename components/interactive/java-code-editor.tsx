@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Editor from 'react-simple-code-editor';
 import { parseJava, type DiagnosticError } from '@/lib/java-parser';
 import { cn } from '@/lib/utils';
 import { AlertTriangle } from 'lucide-react';
-import { highlightLines as syntaxHighlight } from '@/lib/java-syntax-highlight';
+import { highlightCode, highlightLines as syntaxHighlight } from '@/lib/java-syntax-highlight';
 
 interface JavaCodeEditorProps {
   /** Initial code to display */
@@ -40,7 +41,6 @@ export function JavaCodeEditor({
 }: JavaCodeEditorProps) {
   const [code, setCode] = useState(initialCode || '');
   const [errors, setErrors] = useState<DiagnosticError[]>([]);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Parse on code change (debounced)
@@ -68,28 +68,9 @@ export function JavaCodeEditor({
     setErrors([]);
   }, [initialCode]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newCode = e.target.value;
+  const handleValueChange = (newCode: string) => {
     setCode(newCode);
     onCodeChange?.(newCode);
-  };
-
-  // Handle tab key for indentation
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const textarea = textareaRef.current;
-      if (!textarea) return;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newCode = code.substring(0, start) + '  ' + code.substring(end);
-      setCode(newCode);
-      onCodeChange?.(newCode);
-      // Restore cursor position
-      requestAnimationFrame(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-      });
-    }
   };
 
   const lines = code.split('\n');
@@ -107,7 +88,7 @@ export function JavaCodeEditor({
       {/* Editor area */}
       <div className="relative flex" style={{ maxHeight }}>
         {/* Line numbers + error gutter */}
-        <div className="flex-shrink-0 bg-muted/30 border-r border-border select-none overflow-hidden">
+        <div className="flex-shrink-0 bg-muted/30 border-r border-border select-none overflow-hidden pt-3">
           {lines.map((_, i) => {
             const lineNum = i + 1;
             const hasError = errorLines.has(lineNum);
@@ -144,22 +125,20 @@ export function JavaCodeEditor({
               ))}
             </div>
           ) : (
-            <textarea
-              ref={textareaRef}
+            <Editor
               value={code}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              spellCheck={false}
-              autoCapitalize="off"
-              autoCorrect="off"
-              className={cn(
-                'w-full h-full p-3 font-mono text-sm leading-6 bg-transparent resize-none outline-none',
-                'text-foreground caret-primary',
-              )}
+              onValueChange={handleValueChange}
+              highlight={(c) => highlightCode(c)}
+              tabSize={2}
+              insertSpaces
+              padding={12}
+              textareaClassName="code-editor-textarea"
+              className="code-editor-root"
               style={{
                 fontFamily: "var(--font-mono), 'JetBrains Mono', monospace",
+                fontSize: '0.875rem',
+                lineHeight: '1.5rem',
                 minHeight: `${lines.length * 24 + 24}px`,
-                tabSize: 2,
               }}
             />
           )}

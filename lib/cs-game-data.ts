@@ -1,5 +1,5 @@
 /**
- * CS-1301 Unit 1 Review Game - Unified Question Pool
+ * CS-1301 Review Game - Unified Question Pool
  * Chapters 1-2: Introduction to Java & Variables & Assignments
  *
  * Question Types:
@@ -62,6 +62,7 @@ export interface InteractiveData {
 
 export interface CSUnifiedQuestion {
   id: string;
+  concept: string;
   chapter: number;
   section?: string;
   type: CSQuestionType;
@@ -82,6 +83,7 @@ export interface CSUnifiedQuestion {
 const ch1ComputerComponents: CSUnifiedQuestion[] = [
   {
     id: 'ch1-comp-001',
+    concept: 'computer-components',
     chapter: 1,
     section: '1.1',
     type: 'vocabulary',
@@ -93,6 +95,7 @@ const ch1ComputerComponents: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-comp-002',
+    concept: 'computer-components',
     chapter: 1,
     section: '1.1',
     type: 'vocabulary',
@@ -103,6 +106,7 @@ const ch1ComputerComponents: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-comp-003',
+    concept: 'computer-components',
     chapter: 1,
     section: '1.1',
     type: 'true_false',
@@ -113,6 +117,7 @@ const ch1ComputerComponents: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-comp-004',
+    concept: 'computer-components',
     chapter: 1,
     section: '1.1',
     type: 'vocabulary',
@@ -127,6 +132,7 @@ const ch1ComputerComponents: CSUnifiedQuestion[] = [
 const ch1LanguageHistory: CSUnifiedQuestion[] = [
   {
     id: 'ch1-lang-001',
+    concept: 'language-history',
     chapter: 1,
     section: '1.2',
     type: 'vocabulary',
@@ -137,6 +143,7 @@ const ch1LanguageHistory: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-lang-002',
+    concept: 'language-history',
     chapter: 1,
     section: '1.2',
     type: 'true_false',
@@ -147,6 +154,7 @@ const ch1LanguageHistory: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-lang-003',
+    concept: 'language-history',
     chapter: 1,
     section: '1.2',
     type: 'vocabulary',
@@ -157,6 +165,7 @@ const ch1LanguageHistory: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-lang-004',
+    concept: 'language-history',
     chapter: 1,
     section: '1.2',
     type: 'true_false',
@@ -171,6 +180,7 @@ const ch1LanguageHistory: CSUnifiedQuestion[] = [
 const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
   {
     id: 'ch1-prog-001',
+    concept: 'programs-instructions',
     chapter: 1,
     section: '1.3',
     type: 'vocabulary',
@@ -181,6 +191,7 @@ const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-prog-002',
+    concept: 'programs-instructions',
     chapter: 1,
     section: '1.3',
     type: 'vocabulary',
@@ -191,6 +202,7 @@ const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-prog-003',
+    concept: 'programs-instructions',
     chapter: 1,
     section: '1.3',
     type: 'true_false',
@@ -201,6 +213,7 @@ const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-prog-004',
+    concept: 'programs-instructions',
     chapter: 1,
     section: '1.3',
     type: 'code_analysis',
@@ -216,6 +229,7 @@ const ch1ProgramsInstructions: CSUnifiedQuestion[] = [
 const ch1IdeConcepts: CSUnifiedQuestion[] = [
   {
     id: 'ch1-ide-001',
+    concept: 'ide-concepts',
     chapter: 1,
     section: '1.4',
     type: 'vocabulary',
@@ -226,6 +240,7 @@ const ch1IdeConcepts: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-ide-002',
+    concept: 'ide-concepts',
     chapter: 1,
     section: '1.4',
     type: 'vocabulary',
@@ -236,6 +251,7 @@ const ch1IdeConcepts: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-ide-003',
+    concept: 'ide-concepts',
     chapter: 1,
     section: '1.4',
     type: 'true_false',
@@ -246,6 +262,7 @@ const ch1IdeConcepts: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-ide-004',
+    concept: 'ide-concepts',
     chapter: 1,
     section: '1.4',
     type: 'vocabulary',
@@ -260,6 +277,7 @@ const ch1IdeConcepts: CSUnifiedQuestion[] = [
 const ch1ProgrammingBasics: CSUnifiedQuestion[] = [
   {
     id: 'ch1-basics-001',
+    concept: 'programming-basics',
     chapter: 1,
     section: '1.5',
     type: 'vocabulary',
@@ -270,6 +288,7 @@ const ch1ProgrammingBasics: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-basics-002',
+    concept: 'programming-basics',
     chapter: 1,
     section: '1.5',
     type: 'true_false',
@@ -280,6 +299,7 @@ const ch1ProgrammingBasics: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-basics-003',
+    concept: 'programming-basics',
     chapter: 1,
     section: '1.5',
     type: 'vocabulary',
@@ -290,6 +310,7 @@ const ch1ProgrammingBasics: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-basics-004',
+    concept: 'programming-basics',
     chapter: 1,
     section: '1.5',
     type: 'code_analysis',
@@ -305,6 +326,7 @@ const ch1ProgrammingBasics: CSUnifiedQuestion[] = [
 const ch1CommentsWhitespace: CSUnifiedQuestion[] = [
   {
     id: 'ch1-comments-001',
+    concept: 'comments-whitespace',
     chapter: 1,
     section: '1.6',
     type: 'vocabulary',
@@ -315,6 +337,7 @@ const ch1CommentsWhitespace: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-comments-002',
+    concept: 'comments-whitespace',
     chapter: 1,
     section: '1.6',
     type: 'vocabulary',
@@ -325,6 +348,7 @@ const ch1CommentsWhitespace: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-comments-003',
+    concept: 'comments-whitespace',
     chapter: 1,
     section: '1.6',
     type: 'vocabulary',
@@ -335,6 +359,7 @@ const ch1CommentsWhitespace: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-comments-004',
+    concept: 'comments-whitespace',
     chapter: 1,
     section: '1.6',
     type: 'true_false',
@@ -349,6 +374,7 @@ const ch1CommentsWhitespace: CSUnifiedQuestion[] = [
 const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
   {
     id: 'ch1-errors-001',
+    concept: 'errors-debugging',
     chapter: 1,
     section: '1.7',
     type: 'vocabulary',
@@ -359,6 +385,7 @@ const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-errors-002',
+    concept: 'errors-debugging',
     chapter: 1,
     section: '1.7',
     type: 'vocabulary',
@@ -369,6 +396,7 @@ const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-errors-003',
+    concept: 'errors-debugging',
     chapter: 1,
     section: '1.7',
     type: 'identify_error',
@@ -387,6 +415,7 @@ const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch1-errors-004',
+    concept: 'errors-debugging',
     chapter: 1,
     section: '1.7',
     type: 'vocabulary',
@@ -405,6 +434,7 @@ const ch1ErrorsDebugging: CSUnifiedQuestion[] = [
 const ch2VariablesAssignments: CSUnifiedQuestion[] = [
   {
     id: 'ch2-vars-001',
+    concept: 'variables-assignments',
     chapter: 2,
     section: '2.1',
     type: 'vocabulary',
@@ -416,6 +446,7 @@ const ch2VariablesAssignments: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-vars-002',
+    concept: 'variables-assignments',
     chapter: 2,
     section: '2.1',
     type: 'true_false',
@@ -426,6 +457,7 @@ const ch2VariablesAssignments: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-vars-003',
+    concept: 'variables-assignments',
     chapter: 2,
     section: '2.2',
     type: 'vocabulary',
@@ -436,6 +468,7 @@ const ch2VariablesAssignments: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-vars-004',
+    concept: 'variables-assignments',
     chapter: 2,
     section: '2.2',
     type: 'trace_variables',
@@ -454,6 +487,7 @@ const ch2VariablesAssignments: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-vars-005',
+    concept: 'variables-assignments',
     chapter: 2,
     section: '2.3',
     type: 'trace_variables',
@@ -472,6 +506,7 @@ const ch2VariablesAssignments: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-vars-006',
+    concept: 'variables-assignments',
     chapter: 2,
     section: '2.4',
     type: 'code_analysis',
@@ -487,43 +522,151 @@ const ch2VariablesAssignments: CSUnifiedQuestion[] = [
 const ch2Identifiers: CSUnifiedQuestion[] = [
   {
     id: 'ch2-ident-001',
+    concept: 'identifiers',
     chapter: 2,
     section: '2.2',
     type: 'vocabulary',
     question: 'Which of the following is NOT a valid Java identifier?',
     correctAnswer: '3rdPlace',
     distractors: ['_score', '$total', 'playerName'],
-    explanation: 'Identifiers cannot start with a digit. They must begin with a letter, underscore (_), or dollar sign ($).',
+    explanation: 'Language rule: identifiers cannot start with a digit — the compiler rejects 3rdPlace. They must begin with a letter, underscore (_), or dollar sign ($). _score, $total, and playerName all compile.',
   },
   {
     id: 'ch2-ident-002',
+    concept: 'identifiers',
     chapter: 2,
     section: '2.2',
     type: 'true_false',
     question: 'Variable names in Java can start with a number.',
     correctAnswer: 'False',
     distractors: ['True'],
-    explanation: 'Identifiers must start with a letter, underscore (_), or dollar sign ($). They cannot start with a number.',
+    explanation: 'Language rule: identifiers must start with a letter, underscore (_), or dollar sign ($). A leading digit causes a compiler error. This is enforced by the Java lexer, not a style convention.',
   },
   {
     id: 'ch2-ident-003',
+    concept: 'identifiers',
     chapter: 2,
     section: '2.2',
     type: 'vocabulary',
     question: 'Which of the following is NOT a valid Java identifier?',
     correctAnswer: 'first-name',
     distractors: ['firstName', '_first_name', '$firstName'],
-    explanation: 'Identifiers cannot contain hyphens. Valid identifiers use letters, digits, underscores, and dollar signs only.',
+    explanation: 'Language rule: identifiers can only contain letters, digits, underscores, and dollar signs. Hyphens are not allowed — the compiler interprets first-name as subtraction (first minus name). Convention: use camelCase (firstName) for multi-word variable names.',
   },
   {
     id: 'ch2-ident-004',
+    concept: 'identifiers',
     chapter: 2,
     section: '2.2',
     type: 'valid_invalid',
     question: 'Is "class" a valid variable name in Java?',
     correctAnswer: 'Invalid - class is a reserved keyword',
     distractors: ['Valid', 'Invalid - wrong format', 'Invalid - too short'],
-    explanation: 'Java has reserved keywords like class, int, public, etc. that cannot be used as identifier names.',
+    explanation: 'Language rule: "class" is one of Java\'s 50+ reserved keywords — the compiler rejects it as an identifier. This is a hard language constraint, not a naming convention. Keywords like class, int, public, void, etc. can never be variable names.',
+  },
+  // ── Identifier edge cases ──
+  {
+    id: 'ch2-ident-005',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'valid_invalid',
+    question: 'Is "$total" a valid variable name in Java?',
+    correctAnswer: 'Valid — $ is a legal identifier start character',
+    distractors: ['Invalid — special characters are not allowed', 'Invalid — $ is reserved for system use', 'Invalid — identifiers must start with a letter'],
+    explanation: 'Language rule: identifiers can start with a letter, _ , or $. So $total compiles. Convention: $ is reserved for compiler-generated names (e.g., Outer$Inner.class). Using $ in hand-written code is legal but considered bad style.',
+  },
+  {
+    id: 'ch2-ident-006',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'true_false',
+    question: 'Java is case-sensitive, so "count" and "Count" are two different variables.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'Language rule: Java is case-sensitive — count, Count, and COUNT are three distinct identifiers. Convention: variables use camelCase (count), classes use PascalCase (Count), constants use UPPER_SNAKE (COUNT). The compiler doesn\'t enforce this — it\'s a readability convention.',
+  },
+  {
+    id: 'ch2-ident-007',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'valid_invalid',
+    question: 'Is "className" a valid variable name in Java?',
+    correctAnswer: 'Valid — "class" is a keyword but "className" is not',
+    distractors: ['Invalid — it contains the reserved keyword "class"', 'Invalid — capital letters are not allowed mid-word', 'Invalid — variable names cannot contain the word "class"'],
+    explanation: 'Language rule: only exact keyword matches are reserved. "class" is illegal, but "className" compiles fine — the compiler checks for exact token matches, not substrings. No convention conflict here; className is standard camelCase.',
+  },
+  {
+    id: 'ch2-ident-008',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'vocabulary',
+    question: 'Which of these is a valid Java variable name?',
+    correctAnswer: 'point3D',
+    distractors: ['3DPoint', 'my-var', 'for'],
+    explanation: 'Language rules: identifiers cannot start with a digit (3DPoint → compiler error), cannot contain hyphens (my-var → compiler error), and cannot be a reserved keyword (for → compiler error). point3D starts with a letter and contains a digit mid-name, which is legal.',
+  },
+  {
+    id: 'ch2-ident-009',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'vocabulary',
+    question: 'Which of these is NOT a valid Java identifier?',
+    correctAnswer: 'double',
+    distractors: ['_double', '$double', 'doubleValue'],
+    explanation: 'Language rule: "double" is a reserved keyword — the compiler rejects it as an identifier. _double, $double, and doubleValue all compile because they are not exact keyword matches. Convention note: $double is legal but stylistically suspicious ($ is reserved for generated code).',
+  },
+  {
+    id: 'ch2-ident-010',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'true_false',
+    question: 'A Java identifier can contain digits, as long as it does not start with one.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'Language rule: the first character must be a letter, _ , or $; subsequent characters may also include digits (0-9). So score1, player2Name, and x99 all compile. This is enforced by the compiler, not a convention.',
+  },
+  {
+    id: 'ch2-ident-011',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'vocabulary',
+    question: 'A student writes: int _score = 10; — is this valid?',
+    correctAnswer: 'Yes — underscores can start an identifier',
+    distractors: ['No — underscores are not allowed in variable names', 'No — identifiers must start with a letter', 'Yes, but only in Java 8 and earlier'],
+    explanation: 'Language rule: _score compiles in all Java versions — underscore is a legal start character. Language rule (Java 9+): a bare underscore (_) alone is now a reserved keyword and won\'t compile. Convention: leading underscores are uncommon in Java (unlike Python/C); most teams use camelCase without underscores.',
+  },
+  {
+    id: 'ch2-ident-012',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'valid_invalid',
+    question: 'Is "int" a valid variable name in Java?',
+    correctAnswer: 'Invalid — int is a reserved keyword (primitive type)',
+    distractors: ['Valid — it\'s only 3 characters but that\'s fine', 'Valid — primitive type names can be reused', 'Invalid — variable names must be at least 4 characters'],
+    explanation: 'Language rule: all primitive type names (int, double, float, long, byte, short, char, boolean) are reserved keywords — the compiler rejects them as identifiers. intValue, myInt, and _int compile fine because they are not exact matches. This is a compiler-enforced rule, not a convention.',
+  },
+  {
+    id: 'ch2-ident-013',
+    concept: 'identifiers',
+    chapter: 2,
+    section: '2.2',
+    type: 'vocabulary',
+    question: 'What three characters can legally start a Java identifier?',
+    correctAnswer: 'A letter, an underscore (_), or a dollar sign ($)',
+    distractors: [
+      'Only letters (a-z, A-Z)',
+      'A letter or a digit (0-9)',
+      'A letter, an underscore (_), or a hash (#)',
+    ],
+    explanation: 'Language rule (JLS §3.8): identifiers must start with a letter (any Unicode letter), underscore (_), or dollar sign ($). Starting with a digit, hyphen, space, or other special character causes a compiler error. This is a hard language constraint, not a naming convention.',
   },
 ];
 
@@ -531,6 +674,7 @@ const ch2Identifiers: CSUnifiedQuestion[] = [
 const ch2ArithmeticInt: CSUnifiedQuestion[] = [
   {
     id: 'ch2-arith-001',
+    concept: 'arithmetic-int',
     chapter: 2,
     section: '2.5',
     type: 'vocabulary',
@@ -541,6 +685,7 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-arith-002',
+    concept: 'arithmetic-int',
     chapter: 2,
     section: '2.5',
     type: 'predict_output',
@@ -552,12 +697,13 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int x = 2 + 3 * 4;\nSystem.out.println(x);',
-        expectedOutput: '14',
+        expectedOutput: '14\n',
       },
     },
   },
   {
     id: 'ch2-arith-003',
+    concept: 'arithmetic-int',
     chapter: 2,
     section: '2.5',
     type: 'predict_output',
@@ -569,12 +715,13 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int a = 20;\nint b = 10 - 3 * 2;\nSystem.out.println(b);',
-        expectedOutput: '4',
+        expectedOutput: '4\n',
       },
     },
   },
   {
     id: 'ch2-arith-004',
+    concept: 'arithmetic-int',
     chapter: 2,
     section: '2.5',
     type: 'predict_output',
@@ -586,7 +733,7 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int x = 10;\nx = x + 3;\nx = x * 2;\nSystem.out.println(x);',
-        expectedOutput: '26',
+        expectedOutput: '26\n',
       },
     },
   },
@@ -596,6 +743,7 @@ const ch2ArithmeticInt: CSUnifiedQuestion[] = [
 const ch2FloatingPoint: CSUnifiedQuestion[] = [
   {
     id: 'ch2-float-001',
+    concept: 'floating-point',
     chapter: 2,
     section: '2.6',
     type: 'vocabulary',
@@ -606,6 +754,7 @@ const ch2FloatingPoint: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-float-002',
+    concept: 'floating-point',
     chapter: 2,
     section: '2.6',
     type: 'predict_output',
@@ -617,12 +766,13 @@ const ch2FloatingPoint: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int a = 7;\ndouble b = 2.0;\nSystem.out.println(a / b);',
-        expectedOutput: '3.5',
+        expectedOutput: '3.5\n',
       },
     },
   },
   {
     id: 'ch2-float-003',
+    concept: 'floating-point',
     chapter: 2,
     section: '2.6',
     type: 'trace_variables',
@@ -641,6 +791,7 @@ const ch2FloatingPoint: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-float-004',
+    concept: 'floating-point',
     chapter: 2,
     section: '2.6',
     type: 'true_false',
@@ -655,6 +806,7 @@ const ch2FloatingPoint: CSUnifiedQuestion[] = [
 const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
   {
     id: 'ch2-divmod-001',
+    concept: 'int-division-modulo',
     chapter: 2,
     section: '2.7',
     type: 'vocabulary',
@@ -665,6 +817,7 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-divmod-002',
+    concept: 'int-division-modulo',
     chapter: 2,
     section: '2.7',
     type: 'predict_output',
@@ -676,12 +829,13 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int result = 1 / 2;\nSystem.out.println(result);',
-        expectedOutput: '0',
+        expectedOutput: '0\n',
       },
     },
   },
   {
     id: 'ch2-divmod-003',
+    concept: 'int-division-modulo',
     chapter: 2,
     section: '2.7',
     type: 'vocabulary',
@@ -692,6 +846,7 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-divmod-004',
+    concept: 'int-division-modulo',
     chapter: 2,
     section: '2.7',
     type: 'predict_output',
@@ -703,7 +858,7 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int x = 25;\nint y = 7;\nSystem.out.println(x / y + " r " + x % y);',
-        expectedOutput: '3 r 4',
+        expectedOutput: '3 r 4\n',
       },
     },
   },
@@ -713,6 +868,7 @@ const ch2IntDivisionModulo: CSUnifiedQuestion[] = [
 const ch2TypeConversions: CSUnifiedQuestion[] = [
   {
     id: 'ch2-cast-001',
+    concept: 'type-conversions',
     chapter: 2,
     section: '2.8',
     type: 'vocabulary',
@@ -723,6 +879,7 @@ const ch2TypeConversions: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-cast-002',
+    concept: 'type-conversions',
     chapter: 2,
     section: '2.8',
     type: 'valid_invalid',
@@ -733,6 +890,7 @@ const ch2TypeConversions: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-cast-003',
+    concept: 'type-conversions',
     chapter: 2,
     section: '2.8',
     type: 'predict_output',
@@ -744,12 +902,13 @@ const ch2TypeConversions: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'double x = 9.99;\nint y = (int) x;\nSystem.out.println(y);',
-        expectedOutput: '9',
+        expectedOutput: '9\n',
       },
     },
   },
   {
     id: 'ch2-cast-004',
+    concept: 'type-conversions',
     chapter: 2,
     section: '2.8',
     type: 'true_false',
@@ -764,6 +923,7 @@ const ch2TypeConversions: CSUnifiedQuestion[] = [
 const ch2Constants: CSUnifiedQuestion[] = [
   {
     id: 'ch2-const-001',
+    concept: 'constants',
     chapter: 2,
     section: '2.9',
     type: 'vocabulary',
@@ -774,6 +934,7 @@ const ch2Constants: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-const-002',
+    concept: 'constants',
     chapter: 2,
     section: '2.9',
     type: 'vocabulary',
@@ -784,6 +945,7 @@ const ch2Constants: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-const-003',
+    concept: 'constants',
     chapter: 2,
     section: '2.9',
     type: 'identify_error',
@@ -802,6 +964,7 @@ const ch2Constants: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-const-004',
+    concept: 'constants',
     chapter: 2,
     section: '2.9',
     type: 'true_false',
@@ -816,6 +979,7 @@ const ch2Constants: CSUnifiedQuestion[] = [
 const ch2MathMethods: CSUnifiedQuestion[] = [
   {
     id: 'ch2-math-001',
+    concept: 'math-methods',
     chapter: 2,
     section: '2.10',
     type: 'vocabulary',
@@ -826,6 +990,7 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-math-002',
+    concept: 'math-methods',
     chapter: 2,
     section: '2.10',
     type: 'predict_output',
@@ -837,12 +1002,13 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int a = -3;\nint b = -7;\nSystem.out.println(Math.abs(a + b));',
-        expectedOutput: '10',
+        expectedOutput: '10\n',
       },
     },
   },
   {
     id: 'ch2-math-003',
+    concept: 'math-methods',
     chapter: 2,
     section: '2.10',
     type: 'predict_output',
@@ -854,12 +1020,13 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'double result = Math.pow(3, 3) + Math.pow(2, 4);\nSystem.out.println(result);',
-        expectedOutput: '43.0',
+        expectedOutput: '43.0\n',
       },
     },
   },
   {
     id: 'ch2-math-004',
+    concept: 'math-methods',
     chapter: 2,
     section: '2.10',
     type: 'vocabulary',
@@ -874,6 +1041,7 @@ const ch2MathMethods: CSUnifiedQuestion[] = [
 const ch2Binary: CSUnifiedQuestion[] = [
   {
     id: 'ch2-binary-001',
+    concept: 'binary',
     chapter: 2,
     section: '2.11',
     type: 'vocabulary',
@@ -884,6 +1052,7 @@ const ch2Binary: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-binary-002',
+    concept: 'binary',
     chapter: 2,
     section: '2.11',
     type: 'vocabulary',
@@ -894,6 +1063,7 @@ const ch2Binary: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-binary-003',
+    concept: 'binary',
     chapter: 2,
     section: '2.11',
     type: 'vocabulary',
@@ -904,6 +1074,7 @@ const ch2Binary: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-binary-004',
+    concept: 'binary',
     chapter: 2,
     section: '2.11',
     type: 'true_false',
@@ -918,6 +1089,7 @@ const ch2Binary: CSUnifiedQuestion[] = [
 const ch2CharsStrings: CSUnifiedQuestion[] = [
   {
     id: 'ch2-chars-001',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'vocabulary',
@@ -928,6 +1100,7 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-chars-002',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'true_false',
@@ -938,6 +1111,7 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-chars-003',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'predict_output',
@@ -949,12 +1123,13 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int age = 21;\nString message = "Age: " + age + 1;\nSystem.out.println(message);',
-        expectedOutput: 'Age: 211',
+        expectedOutput: 'Age: 211\n',
       },
     },
   },
   {
     id: 'ch2-chars-004',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'code_analysis',
@@ -966,6 +1141,7 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-output-001',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'predict_output',
@@ -977,12 +1153,13 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'System.out.println("Hello");\nSystem.out.println("World");',
-        expectedOutput: 'Hello\nWorld',
+        expectedOutput: 'Hello\nWorld\n',
       },
     },
   },
   {
     id: 'ch2-output-002',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'predict_output',
@@ -994,12 +1171,13 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'System.out.print("Hello");\nSystem.out.println("World");',
-        expectedOutput: 'HelloWorld',
+        expectedOutput: 'HelloWorld\n',
       },
     },
   },
   {
     id: 'ch2-output-003',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'predict_output',
@@ -1011,12 +1189,13 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'System.out.print("A");\nSystem.out.print("B");\nSystem.out.println("C");\nSystem.out.println("D");',
-        expectedOutput: 'ABC\nD',
+        expectedOutput: 'ABC\nD\n',
       },
     },
   },
   {
     id: 'ch2-output-004',
+    concept: 'chars-strings',
     chapter: 2,
     section: '2.12',
     type: 'predict_output',
@@ -1028,7 +1207,7 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
     interactive: {
       outputData: {
         code: 'int x = 5;\nint y = 10;\nSystem.out.println(x);\nSystem.out.println(y);\nSystem.out.println(x + y);',
-        expectedOutput: '5\n10\n15',
+        expectedOutput: '5\n10\n15\n',
       },
     },
   },
@@ -1038,6 +1217,7 @@ const ch2CharsStrings: CSUnifiedQuestion[] = [
 const ch2NumericTypes: CSUnifiedQuestion[] = [
   {
     id: 'ch2-numtype-001',
+    concept: 'numeric-types',
     chapter: 2,
     section: '2.13',
     type: 'vocabulary',
@@ -1048,6 +1228,7 @@ const ch2NumericTypes: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-numtype-002',
+    concept: 'numeric-types',
     chapter: 2,
     section: '2.13',
     type: 'vocabulary',
@@ -1058,6 +1239,7 @@ const ch2NumericTypes: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-numtype-003',
+    concept: 'numeric-types',
     chapter: 2,
     section: '2.13',
     type: 'true_false',
@@ -1068,6 +1250,7 @@ const ch2NumericTypes: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-numtype-004',
+    concept: 'numeric-types',
     chapter: 2,
     section: '2.13',
     type: 'vocabulary',
@@ -1076,12 +1259,205 @@ const ch2NumericTypes: CSUnifiedQuestion[] = [
     distractors: ['int', 'double', 'byte'],
     explanation: 'The maximum value for int is approximately 2.1 billion, which is too small for Earth\'s population (8 billion). You must use long, which can hold values up to about 9 quintillion.',
   },
+  // ── Range vs Precision deep-dive ──
+  {
+    id: 'ch2-numtype-005',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'true_false',
+    question: 'A long can represent every integer value that a double can.',
+    correctAnswer: 'False',
+    distractors: ['True'],
+    explanation: 'double can represent values up to ~1.7×10³⁰⁸, far beyond long\'s max of ~9.2×10¹⁸. However, double cannot exactly represent every integer — it loses precision for integers above 2⁵³. Range and precision are different invariants.',
+  },
+  {
+    id: 'ch2-numtype-006',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'true_false',
+    question: 'A double can exactly represent every integer value that a long can.',
+    correctAnswer: 'False',
+    distractors: ['True'],
+    explanation: 'double uses 52 bits for its mantissa (significand), so it can only exactly represent integers up to 2⁵³ (~9×10¹⁵). long\'s max is ~9.2×10¹⁸ — well beyond what double can represent exactly. double has greater range but less integer precision.',
+  },
+  {
+    id: 'ch2-numtype-007',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'vocabulary',
+    question: 'Both long and double are 64-bit types. What is the key difference in how they use those 64 bits?',
+    correctAnswer: 'long uses all 64 bits for exact integer values; double splits bits between exponent and mantissa for approximate floating-point values',
+    distractors: [
+      'long is signed and double is unsigned',
+      'long stores values in binary but double stores values in decimal',
+      'double uses 64 bits for the whole number part and 64 bits for the decimal part',
+    ],
+    explanation: 'long dedicates all 64 bits to represent an exact integer (one sign bit + 63 value bits). double splits its 64 bits into a sign bit, 11-bit exponent, and 52-bit mantissa — trading exact precision for an enormously larger range.',
+  },
+  {
+    id: 'ch2-numtype-008',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'vocabulary',
+    question: 'You are writing a banking application that tracks account balances in whole cents. Which type should you use: long or double?',
+    correctAnswer: 'long — financial calculations require exact values, and double can introduce rounding errors',
+    distractors: [
+      'double — it has a larger range and can handle bigger balances',
+      'double — it is the default numeric type for monetary values',
+      'Either one — they are both 64-bit so they behave the same',
+    ],
+    explanation: 'Money must be exact. double introduces rounding errors because it stores approximate floating-point values. For example, 0.1 + 0.2 ≠ 0.3 in double. Use long (storing cents) or BigDecimal for financial calculations.',
+  },
+  {
+    id: 'ch2-numtype-009',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'predict_output',
+    question: 'What does this code print?',
+    formula: 'long a = 9007199254740993L;\ndouble b = a;\nlong c = (long) b;\nSystem.out.println(a == c);',
+    correctAnswer: 'false',
+    distractors: ['true', 'Error: cannot convert long to double', 'Error: loss of precision'],
+    explanation: '9007199254740993 is 2⁵³ + 1, which exceeds double\'s exact integer precision. Converting long→double→long loses the last digit. The round-tripped value differs from the original, so a == c is false. Java allows this silent precision loss without error.',
+    interactive: {
+      outputData: {
+        code: 'long a = 9007199254740993L;\ndouble b = a;\nlong c = (long) b;\nSystem.out.println(a == c);',
+        expectedOutput: 'false\n',
+      },
+    },
+  },
+  {
+    id: 'ch2-numtype-010',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'vocabulary',
+    question: 'Why does double have a larger range than long even though both are 64-bit?',
+    correctAnswer: 'double uses an exponent field that allows it to represent powers of 2 up to ~10³⁰⁸, while long can only count up to ~9.2×10¹⁸',
+    distractors: [
+      'double is actually 128 bits internally',
+      'long wastes bits storing the decimal point location',
+      'double compresses values to fit more data into 64 bits',
+    ],
+    explanation: 'double\'s 11-bit exponent acts as a scaling factor — like scientific notation. This lets 64 bits cover ±1.7×10³⁰⁸, but only ~15-16 significant digits are precise. long uses all bits for the value itself, giving exact results but limited to ±9.2×10¹⁸.',
+  },
+  {
+    id: 'ch2-numtype-011',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'predict_output',
+    question: 'What does this code print?',
+    formula: 'double x = 0.1 + 0.2;\nSystem.out.println(x == 0.3);',
+    correctAnswer: 'false',
+    distractors: ['true', '0.3', 'Error: cannot compare double values'],
+    explanation: '0.1 and 0.2 cannot be represented exactly in binary floating-point (IEEE 754). The sum is approximately 0.30000000000000004, not exactly 0.3. This is why you should never use == to compare double values — use a tolerance check instead.',
+    interactive: {
+      outputData: {
+        code: 'double x = 0.1 + 0.2;\nSystem.out.println(x == 0.3);',
+        expectedOutput: 'false\n',
+      },
+    },
+  },
+  {
+    id: 'ch2-numtype-012',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'code_analysis',
+    question: 'A student says: "long is pointless because double can store bigger numbers AND decimals." What is wrong with this reasoning?',
+    correctAnswer: 'double sacrifices exact precision for range — it cannot exactly represent all long values, making it unsuitable for IDs, counts, and money',
+    distractors: [
+      'Nothing — the student is correct that double is always better',
+      'long is faster because it uses fewer bits',
+      'double cannot store negative numbers, so long is needed for those',
+    ],
+    explanation: 'double trades precision for range. Above 2⁵³, double starts skipping integers entirely. For exact values like user IDs, loop counters, or financial cents, long is correct. The student confuses magnitude (how far) with precision (how exact).',
+  },
+  {
+    id: 'ch2-numtype-013',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'predict_output',
+    question: 'What does this code print?',
+    formula: 'double big = 1e20;\ndouble result = big + 1 - big;\nSystem.out.println(result);',
+    correctAnswer: '0.0',
+    distractors: ['1.0', '1', 'Error: overflow'],
+    explanation: '1e20 is so large that adding 1.0 to it produces no change — the 1 is smaller than double\'s precision at that scale. So (big + 1) == big, and big - big == 0.0. This demonstrates that double loses precision for small additions to large values.',
+    interactive: {
+      outputData: {
+        code: 'double big = 1e20;\ndouble result = big + 1 - big;\nSystem.out.println(result);',
+        expectedOutput: '0.0\n',
+      },
+    },
+  },
+  // ── Money bug sequence: show WHY long cents matters ──
+  {
+    id: 'ch2-numtype-014',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'predict_output',
+    question: 'A cashier app adds three $0.10 charges. What does this print?',
+    formula: 'double total = 0.0;\nfor (int i = 0; i < 3; i++) {\n    total += 0.10;\n}\nSystem.out.println(total);',
+    correctAnswer: '0.30000000000000004',
+    distractors: ['0.30', '0.3', '0.1'],
+    explanation: 'double cannot represent 0.1 exactly in binary (just like 1/3 can\'t be written exactly in decimal). Each += 0.10 accumulates a tiny rounding error, so after 3 additions the result is 0.30000000000000004 — not 0.30. This is why real financial software never uses double for money.',
+    interactive: {
+      outputData: {
+        code: 'double total = 0.0;\nfor (int i = 0; i < 3; i++) {\n    total += 0.10;\n}\nSystem.out.println(total);',
+        expectedOutput: '0.30000000000000004\n',
+      },
+    },
+  },
+  {
+    id: 'ch2-numtype-015',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'predict_output',
+    question: 'Same cashier app, but now using long to store cents. What does this print?',
+    formula: 'long totalCents = 0;\nfor (int i = 0; i < 3; i++) {\n    totalCents += 10;  // 10 cents\n}\nSystem.out.println(totalCents);',
+    correctAnswer: '30',
+    distractors: ['30.0', '0.30', '0.30000000000000004'],
+    explanation: 'By storing money as whole cents in a long, every addition is exact integer arithmetic — no rounding error possible. 10 + 10 + 10 = 30 cents, always. To display as dollars, you\'d format it as totalCents / 100.0 only at the very end. This is how real banking software handles money.',
+    interactive: {
+      outputData: {
+        code: 'long totalCents = 0;\nfor (int i = 0; i < 3; i++) {\n    totalCents += 10;\n}\nSystem.out.println(totalCents);',
+        expectedOutput: '30\n',
+      },
+    },
+  },
+  {
+    id: 'ch2-numtype-016',
+    concept: 'numeric-types',
+    chapter: 2,
+    section: '2.13',
+    type: 'predict_output',
+    question: 'The cashier checks if the customer paid exactly $0.30. What does this print?',
+    formula: 'double total = 0.0;\nfor (int i = 0; i < 3; i++) {\n    total += 0.10;\n}\nSystem.out.println(total == 0.30);',
+    correctAnswer: 'false',
+    distractors: ['true', '0', 'Error'],
+    explanation: 'total is 0.30000000000000004, not exactly 0.30, so == returns false. This is the classic "floating-point equality trap." In a real app this bug could mean a valid payment gets rejected. The fix: store cents as long and compare integers (30 == 30 → true).',
+    interactive: {
+      outputData: {
+        code: 'double total = 0.0;\nfor (int i = 0; i < 3; i++) {\n    total += 0.10;\n}\nSystem.out.println(total == 0.30);',
+        expectedOutput: 'false\n',
+      },
+    },
+  },
 ];
 
 // 2.14: Overflow
 const ch2Overflow: CSUnifiedQuestion[] = [
   {
     id: 'ch2-overflow-001',
+    concept: 'overflow',
     chapter: 2,
     section: '2.14',
     type: 'vocabulary',
@@ -1092,6 +1468,7 @@ const ch2Overflow: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-overflow-002',
+    concept: 'overflow',
     chapter: 2,
     section: '2.14',
     type: 'true_false',
@@ -1102,6 +1479,7 @@ const ch2Overflow: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-overflow-003',
+    concept: 'overflow',
     chapter: 2,
     section: '2.14',
     type: 'vocabulary',
@@ -1112,6 +1490,7 @@ const ch2Overflow: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-overflow-004',
+    concept: 'overflow',
     chapter: 2,
     section: '2.14',
     type: 'code_analysis',
@@ -1127,6 +1506,7 @@ const ch2Overflow: CSUnifiedQuestion[] = [
 const ch2RandomNumbers: CSUnifiedQuestion[] = [
   {
     id: 'ch2-random-001',
+    concept: 'random-numbers',
     chapter: 2,
     section: '2.15',
     type: 'vocabulary',
@@ -1137,6 +1517,7 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-random-002',
+    concept: 'random-numbers',
     chapter: 2,
     section: '2.15',
     type: 'vocabulary',
@@ -1147,6 +1528,7 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-random-003',
+    concept: 'random-numbers',
     chapter: 2,
     section: '2.15',
     type: 'code_analysis',
@@ -1158,6 +1540,7 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
   },
   {
     id: 'ch2-random-004',
+    concept: 'random-numbers',
     chapter: 2,
     section: '2.15',
     type: 'true_false',
@@ -1173,11 +1556,196 @@ const ch2RandomNumbers: CSUnifiedQuestion[] = [
 // ============================================
 
 // ============================================
+// JAVA PROGRAM STRUCTURE — keyword drill questions
+// These must be mastered BEFORE write_program questions unlock.
+// ============================================
+const ch1ProgramStructure: CSUnifiedQuestion[] = [
+  // ── Main method signature keywords ──
+  {
+    id: 'ch1-struct-001',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'vocabulary',
+    question: 'Fill in the blank: Every Java program starts running from the ____ method.',
+    correctAnswer: 'main',
+    distractors: ['start', 'run', 'begin'],
+    explanation: 'Java always begins execution at the main method. Its full signature is: public static void main(String[] args)',
+  },
+  {
+    id: 'ch1-struct-002',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'vocabulary',
+    question: 'What are the four keywords that appear before "main" in the main method signature?',
+    correctAnswer: 'public static void',
+    distractors: ['private static void', 'public final void', 'public static int'],
+    explanation: 'The main method signature is always: public static void main(String[] args). The three keywords before "main" are public, static, void — in that exact order.',
+  },
+  {
+    id: 'ch1-struct-003',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'vocabulary',
+    question: 'In the main method signature, what does "void" mean?',
+    correctAnswer: 'The method does not return any value',
+    distractors: ['The method is empty', 'The method takes no inputs', 'The method runs only once'],
+    explanation: '"void" means the method does not give back (return) a value. The main method just runs your code — it doesn\'t produce a result that gets used elsewhere.',
+  },
+  {
+    id: 'ch1-struct-004',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'vocabulary',
+    question: 'What is the parameter type of the main method?',
+    correctAnswer: 'String[]',
+    distractors: ['int[]', 'void', 'char[]'],
+    explanation: 'The main method always takes String[] args as its parameter. This allows the program to receive command-line arguments. You write it as: main(String[] args)',
+  },
+  {
+    id: 'ch1-struct-005',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'true_false',
+    question: 'You can change "public static void main" to "static public void main" and the program will still compile.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'Java allows public and static to appear in either order. However, the standard convention is always "public static void main" — you should memorize and use this order.',
+  },
+  {
+    id: 'ch1-struct-006',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'complete_code',
+    question: 'Complete the main method signature:',
+    formula: 'public ______ void main(String[] args)',
+    correctAnswer: 'static',
+    distractors: ['final', 'class', 'new'],
+    explanation: 'The complete main method signature is: public static void main(String[] args). "static" is the second keyword.',
+  },
+  {
+    id: 'ch1-struct-007',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'complete_code',
+    question: 'Complete the main method signature:',
+    formula: 'public static ______ main(String[] args)',
+    correctAnswer: 'void',
+    distractors: ['int', 'String', 'null'],
+    explanation: 'The complete signature is: public static void main(String[] args). "void" means this method doesn\'t return a value.',
+  },
+  {
+    id: 'ch1-struct-008',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'complete_code',
+    question: 'Complete the main method parameter:',
+    formula: 'public static void main(______ args)',
+    correctAnswer: 'String[]',
+    distractors: ['int[]', 'string[]', 'char[]'],
+    explanation: 'The parameter is String[] args (capital S, square brackets). "string[]" would be wrong — Java is case-sensitive, and String is a class name.',
+  },
+  // ── Class/filename rule ──
+  {
+    id: 'ch1-struct-009',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'true_false',
+    question: 'In Java, the filename must match the public class name (e.g., HelloWorld.java must contain "public class HelloWorld").',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'Language rule: the file HelloWorld.java must contain exactly "public class HelloWorld". If the names don\'t match, the compiler produces an error. This is enforced by the compiler, not a convention.',
+  },
+  {
+    id: 'ch1-struct-010',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'vocabulary',
+    question: 'If your file is named Calculator.java, what must the class declaration be?',
+    correctAnswer: 'public class Calculator',
+    distractors: ['public class calculator', 'class Calculator', 'public Calculator'],
+    explanation: 'The class name must exactly match the filename (minus .java), including capitalization. "public class Calculator" in Calculator.java. Lowercase "calculator" would cause a compiler error.',
+  },
+  // ── Import statements ──
+  {
+    id: 'ch1-struct-011',
+    concept: 'java-program-structure',
+    chapter: 2,
+    section: '2.3',
+    type: 'vocabulary',
+    question: 'Where do import statements go in a Java file?',
+    correctAnswer: 'At the very top of the file, before the class declaration',
+    distractors: ['Inside the main method', 'Inside the class but before main', 'After the class declaration'],
+    explanation: 'Import statements must appear at the top of the file, before any class declaration. Example: import java.util.Scanner; goes above "public class MyProgram {"',
+  },
+  {
+    id: 'ch1-struct-012',
+    concept: 'java-program-structure',
+    chapter: 2,
+    section: '2.3',
+    type: 'vocabulary',
+    question: 'What is the correct import statement for Scanner?',
+    correctAnswer: 'import java.util.Scanner;',
+    distractors: ['import Scanner;', 'import java.Scanner;', 'using java.util.Scanner;'],
+    explanation: 'Scanner lives in the java.util package. The full import is: import java.util.Scanner; — note the semicolon at the end. "using" is C#/C++ syntax, not Java.',
+  },
+  {
+    id: 'ch1-struct-013',
+    concept: 'java-program-structure',
+    chapter: 2,
+    section: '2.3',
+    type: 'true_false',
+    question: 'The Math class (Math.sqrt, Math.pow, Math.PI) requires an import statement.',
+    correctAnswer: 'False',
+    distractors: ['True'],
+    explanation: 'Math is in java.lang, which is auto-imported in every Java program. You never need to write "import java.lang.Math;". Scanner, however, is in java.util and DOES require an import.',
+  },
+  // ── Order of elements ──
+  {
+    id: 'ch1-struct-014',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'vocabulary',
+    question: 'What is the correct order of elements in a Java file?',
+    correctAnswer: 'Import statements → class declaration → main method → statements',
+    distractors: [
+      'Class declaration → import statements → main method → statements',
+      'Main method → class declaration → import statements → statements',
+      'Import statements → main method → class declaration → statements',
+    ],
+    explanation: 'A Java file follows this structure: (1) imports at the top, (2) class declaration, (3) main method inside the class, (4) your code inside main. Changing this order causes compiler errors.',
+  },
+  {
+    id: 'ch1-struct-015',
+    concept: 'java-program-structure',
+    chapter: 1,
+    section: '1.5',
+    type: 'identify_error',
+    question: 'What is wrong with this program?',
+    formula: 'public class Hello {\n    public static void main(String[] args) {\n        System.out.println("Hi");\n    }\n}\nimport java.util.Scanner;',
+    correctAnswer: 'The import statement must be at the top of the file, not after the class',
+    distractors: ['The class name should be lowercase', 'main method is missing a parameter', 'System.out.println is misspelled'],
+    explanation: 'Import statements must appear before the class declaration. Placing them after the closing brace of the class causes a compiler error.',
+  },
+];
+
+// ============================================
 // WRITE PROGRAM CHALLENGES
 // ============================================
 const writeProgramChallenges: CSUnifiedQuestion[] = [
   {
     id: 'wp-001',
+    concept: 'write-programs',
     chapter: 1,
     section: '1.5',
     type: 'write_program',
@@ -1193,7 +1761,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
       programData: {
         filename: 'HelloWorld.java',
         description: 'Write a complete Java program that prints "Hello, World!" to the console.',
-        expectedOutput: 'Hello, World!',
+        expectedOutput: 'Hello, World!\n',
         sampleSolution: `// HelloWorld.java\npublic class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
         requiredElements: ['public class HelloWorld', 'public static void main', 'System.out.println'],
         hints: [
@@ -1206,6 +1774,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
   },
   {
     id: 'wp-002',
+    concept: 'write-programs',
     chapter: 2,
     section: '2.4',
     type: 'write_program',
@@ -1221,7 +1790,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
       programData: {
         filename: 'AreaCalculator.java',
         description: 'Write a complete Java program that declares a double variable radius = 5.0, calculates the area of a circle (π × r²), and prints the result.',
-        expectedOutput: '78.53981633974483',
+        expectedOutput: '78.53981633974483\n',
         sampleSolution: `// AreaCalculator.java\npublic class AreaCalculator {\n    public static void main(String[] args) {\n        double radius = 5.0;\n        double area = Math.PI * radius * radius;\n        System.out.println(area);\n    }\n}`,
         requiredElements: ['public class AreaCalculator', 'public static void main', 'double', 'Math.PI'],
         hints: [
@@ -1234,6 +1803,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
   },
   {
     id: 'wp-003',
+    concept: 'write-programs',
     chapter: 2,
     section: '2.1',
     type: 'write_program',
@@ -1249,7 +1819,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
       programData: {
         filename: 'SwapValues.java',
         description: 'Write a complete Java program that declares int a = 10 and int b = 20, swaps their values using a temporary variable, then prints a and b (each on their own line).',
-        expectedOutput: '20\n10',
+        expectedOutput: '20\n10\n',
         sampleSolution: `// SwapValues.java\npublic class SwapValues {\n    public static void main(String[] args) {\n        int a = 10;\n        int b = 20;\n        int temp = a;\n        a = b;\n        b = temp;\n        System.out.println(a);\n        System.out.println(b);\n    }\n}`,
         requiredElements: ['public class SwapValues', 'public static void main', 'int a', 'int b'],
         hints: [
@@ -1262,6 +1832,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
   },
   {
     id: 'wp-004',
+    concept: 'write-programs',
     chapter: 2,
     section: '2.8',
     type: 'write_program',
@@ -1277,7 +1848,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
       programData: {
         filename: 'TempConverter.java',
         description: 'Write a complete Java program that converts 98.6 degrees Fahrenheit to Celsius using the formula C = (F - 32) × 5/9 and prints the Celsius value.',
-        expectedOutput: '37.0',
+        expectedOutput: '37.0\n',
         sampleSolution: `// TempConverter.java\npublic class TempConverter {\n    public static void main(String[] args) {\n        double fahrenheit = 98.6;\n        double celsius = (fahrenheit - 32) * 5.0 / 9.0;\n        System.out.println(celsius);\n    }\n}`,
         requiredElements: ['public class TempConverter', 'public static void main', 'double'],
         hints: [
@@ -1290,6 +1861,7 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
   },
   {
     id: 'wp-005',
+    concept: 'write-programs',
     chapter: 2,
     section: '2.15',
     type: 'write_program',
@@ -1305,13 +1877,101 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
       programData: {
         filename: 'MathDemo.java',
         description: 'Write a complete Java program that prints Math.sqrt(144) on the first line and Math.pow(2, 10) on the second line.',
-        expectedOutput: '12.0\n1024.0',
+        expectedOutput: '12.0\n1024.0\n',
         sampleSolution: `// MathDemo.java\npublic class MathDemo {\n    public static void main(String[] args) {\n        System.out.println(Math.sqrt(144));\n        System.out.println(Math.pow(2, 10));\n    }\n}`,
         requiredElements: ['public class MathDemo', 'public static void main', 'Math.sqrt', 'Math.pow'],
         hints: [
           'Math.sqrt() and Math.pow() are in java.lang.Math (auto-imported)',
           'System.out.println(Math.sqrt(144)); prints the square root',
           'System.out.println(Math.pow(2, 10)); prints 2^10',
+        ],
+      },
+    },
+  },
+  // ── Scanner-requiring programs ──
+  {
+    id: 'wp-006',
+    concept: 'write-programs',
+    chapter: 2,
+    section: '2.3',
+    type: 'write_program',
+    question: 'Write a complete Java program in Greeter.java that reads the user\'s name from the keyboard and prints "Hello, <name>!"',
+    correctAnswer: 'A program using Scanner to read input and print a greeting',
+    explanation: 'Scanner requires an import statement: import java.util.Scanner; This is not auto-imported like Math.',
+    keyFacts: [
+      'Scanner must be imported: import java.util.Scanner;',
+      'Create Scanner: Scanner input = new Scanner(System.in);',
+      'Read a word: input.nextLine() or input.next()',
+    ],
+    interactive: {
+      programData: {
+        filename: 'Greeter.java',
+        description: 'Write a complete Java program that reads the user\'s name and prints "Hello, <name>!" — you must import Scanner.',
+        expectedOutput: 'Hello, Alice!\n',
+        sampleSolution: `import java.util.Scanner;\n\npublic class Greeter {\n    public static void main(String[] args) {\n        Scanner input = new Scanner(System.in);\n        System.out.print("Enter your name: ");\n        String name = input.nextLine();\n        System.out.println("Hello, " + name + "!");\n    }\n}`,
+        requiredElements: ['import java.util.Scanner', 'public class Greeter', 'public static void main', 'new Scanner', 'System.in'],
+        hints: [
+          'Scanner is in java.util — you need an import statement at the very top',
+          'Create the Scanner: Scanner input = new Scanner(System.in);',
+          'Read with input.nextLine(), then concatenate into "Hello, " + name + "!"',
+        ],
+      },
+    },
+  },
+  {
+    id: 'wp-007',
+    concept: 'write-programs',
+    chapter: 2,
+    section: '2.5',
+    type: 'write_program',
+    question: 'Write a complete Java program in AddTwo.java that reads two integers from the user and prints their sum.',
+    correctAnswer: 'A program using Scanner to read two ints and print the sum',
+    explanation: 'Scanner.nextInt() reads an integer. Remember: Scanner requires an import, and the class name must match the filename.',
+    keyFacts: [
+      'Scanner must be imported: import java.util.Scanner;',
+      'Read an int: input.nextInt()',
+      'The class name must match the filename (AddTwo)',
+    ],
+    interactive: {
+      programData: {
+        filename: 'AddTwo.java',
+        description: 'Write a complete Java program that reads two integers from the user and prints "Sum: " followed by their sum.',
+        expectedOutput: 'Sum: 15\n',
+        sampleSolution: `import java.util.Scanner;\n\npublic class AddTwo {\n    public static void main(String[] args) {\n        Scanner input = new Scanner(System.in);\n        System.out.print("Enter first number: ");\n        int a = input.nextInt();\n        System.out.print("Enter second number: ");\n        int b = input.nextInt();\n        System.out.println("Sum: " + (a + b));\n    }\n}`,
+        requiredElements: ['import java.util.Scanner', 'public class AddTwo', 'public static void main', 'new Scanner', 'nextInt'],
+        hints: [
+          'Start with: import java.util.Scanner;',
+          'Create Scanner, then use nextInt() to read each number',
+          'Print: System.out.println("Sum: " + (a + b)); — parentheses matter for the addition!',
+        ],
+      },
+    },
+  },
+  {
+    id: 'wp-008',
+    concept: 'write-programs',
+    chapter: 2,
+    section: '2.6',
+    type: 'write_program',
+    question: 'Write a complete Java program in CircleCalc.java that reads a radius (double) from the user and prints the area.',
+    correctAnswer: 'A program using Scanner.nextDouble() and Math.PI',
+    explanation: 'This combines Scanner (requires import) with Math.PI (auto-imported). A common gotcha: using nextDouble() not nextInt().',
+    keyFacts: [
+      'Scanner.nextDouble() reads a floating-point number',
+      'Math.PI is a built-in constant (no import needed)',
+      'Area formula: Math.PI * radius * radius',
+    ],
+    interactive: {
+      programData: {
+        filename: 'CircleCalc.java',
+        description: 'Write a complete Java program that reads a radius (as a double) from the user and prints the area of a circle using Math.PI.',
+        expectedOutput: 'Area: 78.53981633974483\n',
+        sampleSolution: `import java.util.Scanner;\n\npublic class CircleCalc {\n    public static void main(String[] args) {\n        Scanner input = new Scanner(System.in);\n        System.out.print("Enter radius: ");\n        double radius = input.nextDouble();\n        double area = Math.PI * radius * radius;\n        System.out.println("Area: " + area);\n    }\n}`,
+        requiredElements: ['import java.util.Scanner', 'public class CircleCalc', 'public static void main', 'new Scanner', 'Math.PI', 'nextDouble'],
+        hints: [
+          'You need import java.util.Scanner; — Math.PI doesn\'t need an import',
+          'Read the radius: double radius = input.nextDouble();',
+          'Calculate: double area = Math.PI * radius * radius;',
         ],
       },
     },
@@ -1326,6 +1986,7 @@ export const unifiedQuestionPool: CSUnifiedQuestion[] = [
   ...ch1ProgrammingBasics,
   ...ch1CommentsWhitespace,
   ...ch1ErrorsDebugging,
+  ...ch1ProgramStructure,
   ...ch2VariablesAssignments,
   ...ch2Identifiers,
   ...ch2ArithmeticInt,

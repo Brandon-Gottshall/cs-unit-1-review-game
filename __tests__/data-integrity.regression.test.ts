@@ -182,6 +182,7 @@ describe('Concept-question mapping', () => {
   it('populateConceptQuestions distributes all questions', () => {
     const questions = unifiedQuestionPool.map(q => ({
       id: q.id,
+      concept: q.concept,
       question: q.question,
       type: q.type,
       chapter: q.chapter,

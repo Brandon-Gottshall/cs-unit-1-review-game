@@ -10,6 +10,7 @@ type TokenType =
   | 'annotation'
   | 'method'
   | 'operator'
+  | 'blank'
   | 'plain';
 
 interface Token {
@@ -44,6 +45,7 @@ const TOKEN_CLASSES: Record<TokenType, string> = {
   annotation: 'syn-ann',
   method: 'syn-fn',
   operator: 'syn-op',
+  blank: 'syn-blank',
   plain: '',
 };
 
@@ -115,6 +117,15 @@ export function tokenizeJava(code: string): Token[] {
       continue;
     }
 
+    // Blank placeholder (3+ underscores) — for fill-in-the-blank questions
+    if (code[i] === '_' && i + 2 < code.length && code[i + 1] === '_' && code[i + 2] === '_') {
+      let j = i;
+      while (j < code.length && code[j] === '_') j++;
+      tokens.push({ type: 'blank', value: code.slice(i, j) });
+      i = j;
+      continue;
+    }
+
     // Identifier / keyword / type / method
     if (/[a-zA-Z_$]/.test(code[i])) {
       let j = i;
@@ -173,6 +184,11 @@ function renderTokens(tokens: Token[]): React.ReactNode[] {
       </span>
     );
   });
+}
+
+/** Highlight a full Java code string as a single React node (for overlay editors). */
+export function highlightCode(code: string): React.ReactNode {
+  return <>{renderTokens(tokenizeJava(code))}</>;
 }
 
 /** Highlight a single line of Java (no newlines expected). */

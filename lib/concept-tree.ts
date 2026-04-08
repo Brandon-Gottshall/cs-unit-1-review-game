@@ -28,7 +28,7 @@ export type MasteryData = Record<string, { correct: number; total: number }>;
 export const MASTERY_THRESHOLD = 0.7;
 
 /**
- * The actual concept tree for CS-1301 Unit 1 (Chapters 1-2)
+ * The actual concept tree for CS-1301
  *
  * Layout (skill tree style):
  *
@@ -247,6 +247,28 @@ export const conceptTree: ConceptTree = [
     y: 85,
   },
 
+  // === TIER 7.5: Program Structure & Writing ===
+  {
+    id: 'java-program-structure',
+    name: 'Java Program Structure',
+    description: 'The anatomy of a Java file: import statements, class declaration, main method signature (public static void main), filename↔classname rule',
+    prerequisites: ['programming-basics', 'identifiers'],
+    questionIds: [],
+    chapter: 1,
+    x: 50,
+    y: 88,
+  },
+  {
+    id: 'write-programs',
+    name: 'Write Full Programs',
+    description: 'Writing complete Java programs from scratch: imports, class, main method, Scanner, output',
+    prerequisites: ['java-program-structure', 'floating-point'],
+    questionIds: [],
+    chapter: 2,
+    x: 50,
+    y: 95,
+  },
+
   // === TIER 8: Advanced Topics ===
   {
     id: 'overflow',
@@ -271,75 +293,24 @@ export const conceptTree: ConceptTree = [
 ];
 
 /**
- * Content-based keyword mapping for concepts
- * Maps question content keywords to concept IDs
- */
-const conceptKeywords: Record<string, string[]> = {
-  'computer-components': ['RAM', 'SSD', 'cache', 'clock', 'Moore', 'operating system', 'processor', 'IC capacity', 'volatile', 'non-volatile', 'memory', 'storage', 'bandwidth'],
-  'language-history': ['1978', '1985', '1995', 'C book', 'C++', 'Java', 'evolution', 'history', 'Kernighan', 'Ritchie', 'Stroustrup', 'Gosling'],
-  'programs-instructions': ['machine instruction', 'assembly', 'compiler', 'application', '0s and 1s', 'bit', 'switch', 'processor execute', 'program', 'instruction set'],
-  'ide-concepts': ['IDE', 'syntax highlighting', 'delimiter', 'console', 'command-line', 'CLI', 'tab', 'text editor', 'IntelliJ', 'Eclipse'],
-  'programming-basics': ['main()', 'semicolon', 'println', 'print', 'statement', 'braces', 'int wage', 'System.out', 'execution', 'entry point'],
-  'comments-whitespace': ['comment', '//', '/*', 'whitespace', 'readability', 'indentation', 'formatting'],
-  'errors-debugging': ['syntax error', 'logic error', 'runtime error', 'compile', 'debug', 'breakpoint', 'warning', 'exception'],
-  'variables-assignments': ['variable', 'assignment', 'int x', 'value of', 'trace', 'left side', 'valid', 'invalid', 'declaration'],
-  'identifiers': ['identifier', 'camelCase', 'reserved', 'keyword', 'naming', 'private', 'public', 'class', 'void'],
-  'arithmetic-int': ['arithmetic', 'precedence', 'operator', 'parenthes', 'evaluate', 'expression', 'PEMDAS', '+ - * /'],
-  'floating-point': ['double', 'floating', 'decimal', 'mixed', 'float', '3.14', 'real number'],
-  'int-division-modulo': ['integer division', 'modulo', 'remainder', 'truncat', '% operator', 'even', 'odd'],
-  'type-conversions': ['type conv', 'cast', 'widening', 'narrowing', '(int)', '(double)', 'implicit', 'explicit'],
-  'constants': ['final', 'constant', 'UPPER_CASE', 'UPPER', 'immutable'],
-  'math-methods': ['Math.pow', 'Math.sqrt', 'Math.abs', 'exponent', 'square root', 'absolute', 'Math.'],
-  'binary': ['binary', 'decimal to binary', 'binary to decimal', 'base 2', '0b'],
-  'chars-strings': ['char', 'character', 'ASCII', 'String', 'concatenat', 'charAt', 'substring', 'length()', 'quote'],
-  'numeric-types': ['byte', 'short', 'long', 'float', 'data type', 'range', 'primitive'],
-  'overflow': ['overflow', 'exceed', 'wrap around', 'Integer.MAX_VALUE', 'boundary'],
-  'random-numbers': ['Random', 'seed', 'nextInt', 'random number', 'range', 'Math.random'],
-};
-
-/**
- * Map a question to its concept based on type, chapter, and content
+ * @deprecated Use q.concept directly — all questions now carry an explicit concept field.
+ * Kept as fallback for any edge cases.
  */
 export function getQuestionConcept(
   questionId: string,
-  questionText: string,
-  questionType: string,
+  _questionText: string,
+  _questionType: string,
   chapter: number
 ): string {
-  const text = questionText.toLowerCase();
-
-  // Type-based mapping for specific question types
-  if (questionId.startsWith('trace-')) {
-    return 'variables-assignments';
-  }
-  if (questionId.startsWith('predict-output-')) {
-    return 'programming-basics';
-  }
-  if (questionId.startsWith('identify-error-')) {
-    return 'errors-debugging';
-  }
-  if (questionId.startsWith('binary-')) {
-    return 'binary';
-  }
-  if (questionId.startsWith('random-')) {
-    return 'random-numbers';
-  }
-
-  // Content-based keyword matching
-  for (const [conceptId, keywords] of Object.entries(conceptKeywords)) {
-    for (const keyword of keywords) {
-      if (text.includes(keyword.toLowerCase())) {
-        return conceptId;
-      }
-    }
+  // ID-prefix fallback
+  if (questionId.startsWith('gen-')) {
+    // Generated questions encode concept in ID: gen-{concept}-{seed}
+    const parts = questionId.split('-');
+    return parts.slice(1, -1).join('-');
   }
 
   // Chapter-based fallback
-  switch (chapter) {
-    case 1: return 'programming-basics';
-    case 2: return 'variables-assignments';
-    default: return 'programming-basics';
-  }
+  return chapter === 1 ? 'programming-basics' : 'variables-assignments';
 }
 
 /**
@@ -488,26 +459,24 @@ export function calculateTreeProgress(
  */
 export interface QuestionForMapping {
   id: string;
+  concept: string;
   question: string;
   type: string;
   chapter: number;
 }
 
 /**
- * Populate concept tree with actual question IDs from the pool
- * Call this once at initialization to map questions to concepts
+ * Populate concept tree with actual question IDs from the pool.
+ * Uses the explicit `concept` field on each question.
  */
 export function populateConceptQuestions(
   tree: ConceptTree,
   questions: QuestionForMapping[]
 ): ConceptTree {
-  // Create a working copy
   const populated = tree.map(c => ({ ...c, questionIds: [] as string[] }));
 
-  // Map each question to its concept
   for (const q of questions) {
-    const conceptId = getQuestionConcept(q.id, q.question, q.type, q.chapter);
-    const concept = populated.find(c => c.id === conceptId);
+    const concept = populated.find(c => c.id === q.concept);
     if (concept) {
       concept.questionIds.push(q.id);
     }

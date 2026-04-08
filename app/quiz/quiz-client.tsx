@@ -28,15 +28,22 @@ import {
   resetSession,
   reconcileSession,
   recordAnswer as srRecordAnswer,
-  getNextQuestion,
+  getNextConcept,
   getSessionStats,
   isSessionComplete,
-  getQuestionProgress,
+  getConceptProgress,
   saveSession,
   saveSessionIfNewer,
   loadSession,
   clearSavedSession,
 } from "@/lib/spaced-repetition";
+import {
+  createVariationPicker,
+  pickVariation,
+  serializePickerState,
+  deserializePickerState,
+  type VariationPickerState,
+} from "@/lib/variation-picker";
 
 // History entry type
 interface HistoryEntry {
@@ -277,7 +284,7 @@ function CodeAnswerOptions({ question, onAnswer }: CodeAnswerOptionsProps) {
             disabled={hasSubmitted || isEliminated}
             className={className}
           >
-            <span className="text-sm">{option}</span>
+            <span className="text-sm whitespace-pre-wrap">{option}</span>
           </button>
         );
       })}
@@ -459,7 +466,7 @@ function QuestionCard({ question, streak, onAnswer }: QuestionCardProps) {
                   disabled={hasSubmitted || isEliminated}
                   className={className}
                 >
-                  <span className="text-sm">{option}</span>
+                  <span className="text-sm whitespace-pre-wrap">{option}</span>
                 </button>
               );
             })}
@@ -602,6 +609,7 @@ function QuestionCard({ question, streak, onAnswer }: QuestionCardProps) {
 }
 
 const HISTORY_STORAGE_KEY = 'cs1301-session-history';
+const PICKER_STORAGE_KEY = 'cs1301-variation-picker';
 
 export default function QuizClient() {
   const router = useRouter();
@@ -618,7 +626,9 @@ export default function QuizClient() {
 
   const [initialized, setInitialized] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
-  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
+  const [currentConceptId, setCurrentConceptId] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<CSUnifiedQuestion | null>(null);
+  const [pickerState, setPickerState] = useState<VariationPickerState>(() => createVariationPicker());
   const [stats, setStats] = useState({ total: 0, graduated: 0, remaining: 0, struggling: 0, questionsAnswered: 0, accuracy: 0 });
   const [currentStreak, setCurrentStreak] = useState(0);
 
@@ -645,13 +655,7 @@ export default function QuizClient() {
   // Skill tree
   const [showSkillTree, setShowSkillTree] = useState(false);
   const [populatedConceptTree] = useState(() => {
-    const questions = unifiedQuestionPool.map(q => ({
-      id: q.id,
-      question: q.question,
-      type: q.type,
-      chapter: q.chapter,
-    }));
-    return populateConceptQuestions(conceptTree, questions);
+    return populateConceptQuestions(conceptTree, unifiedQuestionPool);
   });
 
   // Build mastery data from history for skill tree
@@ -669,6 +673,26 @@ export default function QuizClient() {
     return data;
   }, [history]);
 
+  // Derive unique concept IDs from filtered pool
+  const conceptIds = useMemo(() => {
+    return [...new Set(filteredPool.map(q => q.concept))];
+  }, [filteredPool]);
+
+  // Helper: advance to the next concept + pick a variation
+  const advanceToNext = useCallback((picker: VariationPickerState) => {
+    const nextConcept = getNextConcept();
+    setCurrentConceptId(nextConcept);
+    if (nextConcept) {
+      const question = pickVariation(nextConcept, filteredPool, picker);
+      setCurrentQuestion(question);
+      const progress = getConceptProgress(nextConcept);
+      setCurrentStreak(progress?.streak || 0);
+    } else {
+      setCurrentQuestion(null);
+    }
+    setStats(getSessionStats());
+  }, [filteredPool]);
+
   // Initialize session on mount - check for saved progress
   useEffect(() => {
     const hasSaved = loadSession();
@@ -682,78 +706,75 @@ export default function QuizClient() {
       } catch (e) {
         console.error('Failed to load history:', e);
       }
+      // Restore picker state
+      try {
+        const savedPicker = localStorage.getItem(PICKER_STORAGE_KEY);
+        if (savedPicker) {
+          const restored = deserializePickerState(savedPicker);
+          setPickerState(restored);
+        }
+      } catch (e) {
+        console.error('Failed to load picker:', e);
+      }
       setShowResumePrompt(true);
       setInitialized(true);
     } else {
-      const questionIds = filteredPool.map(q => q.id);
-      getSession(questionIds);
-      setCurrentQuestionId(getNextQuestion());
-      setStats(getSessionStats());
+      getSession(conceptIds);
+      const picker = createVariationPicker();
+      setPickerState(picker);
+      advanceToNext(picker);
       setInitialized(true);
     }
 
     return () => {
       saveSessionIfNewer();
     };
-  }, [filteredPool]);
+  }, [conceptIds, advanceToNext]);
 
   // Handle resuming or starting fresh
   const handleResumeSession = useCallback(() => {
     setShowResumePrompt(false);
-    const questionIds = filteredPool.map(q => q.id);
-    reconcileSession(questionIds);
-    const nextId = getNextQuestion();
-    setCurrentQuestionId(nextId);
-    setStats(getSessionStats());
-    if (nextId) {
-      const nextProgress = getQuestionProgress(nextId);
-      setCurrentStreak(nextProgress?.streak || 0);
-    }
-  }, [filteredPool]);
+    reconcileSession(conceptIds);
+    advanceToNext(pickerState);
+  }, [conceptIds, pickerState, advanceToNext]);
 
   const handleStartFresh = useCallback(() => {
     setShowResumePrompt(false);
     clearSavedSession();
     localStorage.removeItem(HISTORY_STORAGE_KEY);
+    localStorage.removeItem(PICKER_STORAGE_KEY);
     setHistory([]);
     resetSession();
-    const questionIds = filteredPool.map(q => q.id);
-    getSession(questionIds);
-    setCurrentQuestionId(getNextQuestion());
-    setStats(getSessionStats());
-    setCurrentStreak(0);
-  }, [filteredPool]);
-
-  const currentQuestion = currentQuestionId ? getQuestionMap().get(currentQuestionId) : null;
-  const progress = getQuestionProgress(currentQuestionId || '');
+    getSession(conceptIds);
+    const picker = createVariationPicker();
+    setPickerState(picker);
+    advanceToNext(picker);
+  }, [conceptIds, advanceToNext]);
 
   const handleAnswer = useCallback(
     (isCorrect: boolean, explanation: string, penalty: number, selectedAnswer?: string) => {
-      if (!currentQuestionId) return;
+      if (!currentConceptId || !currentQuestion) return;
 
-      const question = getQuestionMap().get(currentQuestionId);
-      if (!question) return;
-
-      const newState = srRecordAnswer(currentQuestionId, isCorrect, penalty);
+      const newState = srRecordAnswer(currentConceptId, isCorrect, penalty);
       setCurrentStreak(newState.streak);
 
       setLatestAnswer({
-        questionId: currentQuestionId,
+        questionId: currentQuestion.id,
         yourAnswer: selectedAnswer || null,
         isCorrect,
         explanation,
-        keyFacts: question.keyFacts,
+        keyFacts: currentQuestion.keyFacts,
       });
 
       const newEntry: HistoryEntry = {
-        questionId: currentQuestionId,
-        question: question.question,
+        questionId: currentQuestion.id,
+        question: currentQuestion.question,
         yourAnswer: selectedAnswer || null,
-        correctAnswer: question.correctAnswer,
+        correctAnswer: currentQuestion.correctAnswer,
         isCorrect,
         timestamp: Date.now(),
-        type: question.type,
-        chapter: question.chapter,
+        type: currentQuestion.type,
+        chapter: currentQuestion.chapter,
       };
       setHistory(prev => {
         const updated = [...prev, newEntry];
@@ -765,20 +786,33 @@ export default function QuizClient() {
         return updated;
       });
 
+      // Save picker state alongside session
+      try {
+        localStorage.setItem(PICKER_STORAGE_KEY, serializePickerState(pickerState));
+      } catch (e) {
+        console.error('Failed to save picker:', e);
+      }
+
       setStats(getSessionStats());
       saveSession();
 
       let message: string;
       if (!isCorrect) {
-        message = "Not quite — you'll see this again soon";
+        message = "Not quite — you'll see this concept again soon";
       } else if (penalty === 1) {
         message = "Got it on the second try";
       } else if (newState.graduated) {
-        message = "Mastered! 🎉";
+        message = "Concept mastered! 🎉";
       } else if (newState.streak === 1) {
         message = "Correct!";
       } else {
         message = `${newState.streak}x streak!`;
+      }
+
+      // Write-program questions show results inline via their test runner —
+      // skip the FeedbackOverlay so students can review tests before continuing.
+      if (currentQuestion.type === 'write_program') {
+        return;
       }
 
       setFeedback({
@@ -788,33 +822,25 @@ export default function QuizClient() {
       });
       setShowFeedback(true);
     },
-    [currentQuestionId]
+    [currentConceptId, currentQuestion, pickerState]
   );
 
   const handleContinue = useCallback(() => {
     setShowFeedback(false);
     setFeedback(null);
     setLatestAnswer(null);
-
-    const nextId = getNextQuestion();
-    setCurrentQuestionId(nextId);
-    setStats(getSessionStats());
-
-    if (nextId) {
-      const nextProgress = getQuestionProgress(nextId);
-      setCurrentStreak(nextProgress?.streak || 0);
-    }
-  }, []);
+    advanceToNext(pickerState);
+  }, [pickerState, advanceToNext]);
 
   const handleRestart = () => {
     clearSavedSession();
     localStorage.removeItem(HISTORY_STORAGE_KEY);
+    localStorage.removeItem(PICKER_STORAGE_KEY);
     resetSession();
-    const questionIds = filteredPool.map(q => q.id);
-    getSession(questionIds);
-    setCurrentQuestionId(getNextQuestion());
-    setStats(getSessionStats());
-    setCurrentStreak(0);
+    getSession(conceptIds);
+    const picker = createVariationPicker();
+    setPickerState(picker);
+    advanceToNext(picker);
     setHistory([]);
   };
 
@@ -828,19 +854,14 @@ export default function QuizClient() {
     setLatestAnswer(null);
     if (reviewFromFeedback) {
       setReviewFromFeedback(false);
-      const nextId = getNextQuestion();
-      setCurrentQuestionId(nextId);
-      setStats(getSessionStats());
-      if (nextId) {
-        const nextProgress = getQuestionProgress(nextId);
-        setCurrentStreak(nextProgress?.streak || 0);
-      }
+      advanceToNext(pickerState);
     }
-  }, [reviewFromFeedback]);
+  }, [reviewFromFeedback, pickerState, advanceToNext]);
 
   const handleFinish = () => {
     clearSavedSession();
     localStorage.removeItem(HISTORY_STORAGE_KEY);
+    localStorage.removeItem(PICKER_STORAGE_KEY);
     resetSession();
     router.push('/');
   };
@@ -870,7 +891,7 @@ export default function QuizClient() {
           <div className="text-center space-y-4 max-w-md">
             <h2 className="text-2xl font-bold">Previous Session Found</h2>
             <div className="text-muted-foreground space-y-1">
-              <p>Progress: {savedStats.graduated} of {savedStats.total} mastered</p>
+              <p>Progress: {savedStats.graduated} of {savedStats.total} concepts mastered</p>
               <p>Questions answered: {savedStats.questionsAnswered}</p>
               <p>Accuracy: {savedStats.accuracy}%</p>
             </div>
@@ -905,7 +926,7 @@ export default function QuizClient() {
     return (
       <GameShell
         title="Session Complete!"
-        description="You've mastered all questions"
+        description="You've mastered all concepts"
       >
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
           <div className="relative">
@@ -915,7 +936,7 @@ export default function QuizClient() {
           </div>
 
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold">All Questions Mastered!</h2>
+            <h2 className="text-2xl font-bold">All Concepts Mastered!</h2>
             <p className="text-muted-foreground">
               You answered {stats.questionsAnswered} questions with {stats.accuracy}% accuracy
             </p>
@@ -947,7 +968,7 @@ export default function QuizClient() {
   return (
     <GameShell
       title="Cram Session"
-      description={`${stats.graduated} / ${stats.total} mastered`}
+      description={`${stats.graduated} / ${stats.total} concepts mastered`}
     >
       {/* Dev filter indicator */}
       {typeFilter && (
@@ -965,7 +986,7 @@ export default function QuizClient() {
       <div className="py-4 pb-20">
         {currentQuestion && currentQuestion.type === 'trace_variables' && currentQuestion.interactive?.variantData ? (
           <VariableTraceViz
-            key={currentQuestionId}
+            key={currentQuestion.id}
             code={currentQuestion.interactive.variantData.code}
             steps={currentQuestion.interactive.variantData.steps?.map((desc, idx) => ({
               line: idx + 1,
@@ -979,13 +1000,13 @@ export default function QuizClient() {
           />
         ) : currentQuestion && currentQuestion.type === 'predict_output' && currentQuestion.interactive?.outputData ? (
           <CodeOutputComparison
-            key={currentQuestionId}
+            key={currentQuestion.id}
             code={currentQuestion.interactive.outputData.code}
             expectedOutput={currentQuestion.interactive.outputData.expectedOutput}
             questionPrompt={currentQuestion.question}
             onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
           />
-        ) : currentQuestion && (currentQuestion.type === 'identify_error' || currentQuestion.type === 'complete_code') && currentQuestion.formula ? (
+        ) : currentQuestion && (currentQuestion.type === 'identify_error' || (currentQuestion.type === 'complete_code' && !currentQuestion.distractors?.length)) && currentQuestion.formula ? (
           <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur border-border/50">
             <CardContent className="p-6 space-y-6">
               <div className="flex items-center justify-between">
@@ -1029,20 +1050,23 @@ export default function QuizClient() {
           </Card>
         ) : currentQuestion && currentQuestion.type === 'write_program' && currentQuestion.interactive?.programData ? (
           <WriteProgramChallenge
-            key={currentQuestionId}
+            key={currentQuestion.id}
             filename={currentQuestion.interactive.programData.filename}
             description={currentQuestion.question}
             expectedOutput={currentQuestion.interactive.programData.expectedOutput}
             sampleSolution={currentQuestion.interactive.programData.sampleSolution}
             requiredElements={currentQuestion.interactive.programData.requiredElements}
             hints={currentQuestion.interactive.programData.hints}
-            onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
+            onAnswer={(isCorrect, penalty, studentCode, explanation) =>
+              handleAnswer(isCorrect, explanation, penalty, studentCode)
+            }
+            onContinue={handleContinue}
           />
         ) : currentQuestion ? (
           <QuestionCard
-            key={currentQuestionId}
+            key={currentQuestion.id}
             question={currentQuestion}
-            streak={progress?.streak || 0}
+            streak={currentStreak}
             onAnswer={handleAnswer}
           />
         ) : null}
@@ -1053,7 +1077,7 @@ export default function QuizClient() {
         <div className="max-w-2xl mx-auto flex justify-between text-sm">
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">
-              <span className="font-bold text-primary">{stats.graduated}</span> / {stats.total} mastered
+              <span className="font-bold text-primary">{stats.graduated}</span> / {stats.total} concepts
             </span>
             <span className="text-muted-foreground">
               <span className="font-bold text-foreground">{stats.remaining}</span> remaining
@@ -1093,8 +1117,8 @@ export default function QuizClient() {
         onContinue={handleContinue}
         onReviewQuestion={() => {
           setShowFeedback(false);
-          if (currentQuestionId) {
-            setReviewingQuestionId(currentQuestionId);
+          if (currentQuestion) {
+            setReviewingQuestionId(currentQuestion.id);
             setReviewFromFeedback(true);
           }
         }}
@@ -1164,36 +1188,65 @@ export default function QuizClient() {
                 </pre>
               )}
 
-              {/* Show all answer options */}
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Answer Options:</p>
-                {(() => {
-                  const allOptions = [reviewQuestion.correctAnswer, ...(reviewQuestion.distractors || [])];
-                  return allOptions.map((option, idx) => {
-                    const isCorrect = option === reviewQuestion.correctAnswer;
-                    const wasSelected = answerInfo?.yourAnswer === option;
-
-                    let className = "p-3 rounded-lg border text-sm ";
-                    if (isCorrect) {
-                      className += "bg-green-500/10 border-green-500/30 text-green-400";
-                    } else if (wasSelected) {
-                      className += "bg-red-500/10 border-red-500/30 text-red-400";
-                    } else {
-                      className += "bg-muted/30 border-border/50 text-muted-foreground";
-                    }
-
-                    return (
-                      <div key={idx} className={className}>
-                        <div className="flex items-center gap-2">
-                          {isCorrect && <Check className="w-4 h-4 text-green-400 flex-shrink-0" />}
-                          {wasSelected && !isCorrect && <X className="w-4 h-4 text-red-400 flex-shrink-0" />}
-                          <span>{option}</span>
-                        </div>
+              {/* Show answer — write_program shows student code vs solution, predict_output shows expected output, others show MC options */}
+              {reviewQuestion.type === 'write_program' && reviewQuestion.interactive?.programData ? (
+                <div className="space-y-3">
+                  {answerInfo?.yourAnswer && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Your Code:</p>
+                      <div className="rounded-lg border border-border/50 bg-black/40 overflow-x-auto">
+                        <pre className="font-mono text-sm leading-relaxed text-foreground/90 p-3 whitespace-pre">{answerInfo.yourAnswer}</pre>
                       </div>
-                    );
-                  });
-                })()}
-              </div>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Sample Solution:</p>
+                    <div className="rounded-lg border border-green-500/20 bg-black/40 overflow-x-auto">
+                      <pre className="font-mono text-sm leading-relaxed text-green-400/90 p-3 whitespace-pre">{reviewQuestion.interactive.programData.sampleSolution}</pre>
+                    </div>
+                  </div>
+                </div>
+              ) : reviewQuestion.type === 'predict_output' && reviewQuestion.interactive?.outputData ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Expected Output:</p>
+                  <div className="p-3 rounded-lg border bg-green-500/10 border-green-500/30">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <pre className="font-mono text-sm text-green-400 whitespace-pre">{reviewQuestion.interactive.outputData.expectedOutput}</pre>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Answer Options:</p>
+                  {(() => {
+                    const allOptions = [reviewQuestion.correctAnswer, ...(reviewQuestion.distractors || [])];
+                    return allOptions.map((option, idx) => {
+                      const isCorrect = option === reviewQuestion.correctAnswer;
+                      const wasSelected = answerInfo?.yourAnswer === option;
+
+                      let className = "p-3 rounded-lg border text-sm ";
+                      if (isCorrect) {
+                        className += "bg-green-500/10 border-green-500/30 text-green-400";
+                      } else if (wasSelected) {
+                        className += "bg-red-500/10 border-red-500/30 text-red-400";
+                      } else {
+                        className += "bg-muted/30 border-border/50 text-muted-foreground";
+                      }
+
+                      return (
+                        <div key={idx} className={className}>
+                          <div className="flex items-center gap-2">
+                            {isCorrect && <Check className="w-4 h-4 text-green-400 flex-shrink-0" />}
+                            {wasSelected && !isCorrect && <X className="w-4 h-4 text-red-400 flex-shrink-0" />}
+                            <span className="whitespace-pre-wrap">{option}</span>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
 
               {/* Show explanation */}
               {(latestAnswer?.questionId === reviewingQuestionId && latestAnswer.explanation) ? (

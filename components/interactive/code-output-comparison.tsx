@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { JavaCodeEditor } from '@/components/interactive/java-code-editor';
 
@@ -17,23 +16,21 @@ export interface CodeOutputComparisonProps {
 
 type MatchResult = 'correct' | 'incorrect' | 'partial';
 
+function normalize(s: string) {
+  return s.replace(/\r/g, '').replace(/[ \t]+$/gm, '');
+}
+
 function getMatchResult(
   userOutput: string,
   expectedOutput: string
 ): { result: MatchResult; penalty: number } {
-  // Normalize: strip trailing whitespace on each line, drop empty trailing lines
-  const normalize = (s: string) =>
-    s.replace(/[ \t]+$/gm, '').replace(/\n+$/, '');
-
   const userNorm = normalize(userOutput);
   const expectedNorm = normalize(expectedOutput);
 
-  // Exact match (after normalizing trailing spaces/blank lines)
   if (userNorm === expectedNorm) {
     return { result: 'correct', penalty: 0 };
   }
 
-  // Line structure must match — newlines matter (print vs println)
   const userLines = userNorm.split('\n');
   const expectedLines = expectedNorm.split('\n');
 
@@ -41,7 +38,6 @@ function getMatchResult(
     return { result: 'incorrect', penalty: 2 };
   }
 
-  // Same line count but minor per-line whitespace diffs → partial credit
   if (userLines.every((line, idx) => line.trim() === expectedLines[idx].trim())) {
     return { result: 'partial', penalty: 1 };
   }
@@ -49,9 +45,15 @@ function getMatchResult(
   return { result: 'incorrect', penalty: 2 };
 }
 
+/** Check if the user's answer is correct content-wise but just missing the trailing newline. */
+function isMissingTrailingNewline(userOutput: string, expectedOutput: string): boolean {
+  const userNorm = normalize(userOutput);
+  const expectedNorm = normalize(expectedOutput);
+  if (userNorm === expectedNorm) return false;
+  return (userNorm + '\n') === expectedNorm;
+}
+
 function computeDiff(userOutput: string, expectedOutput: string) {
-  const normalize = (s: string) =>
-    s.replace(/[ \t]+$/gm, '').replace(/\n+$/, '');
   const userLines = normalize(userOutput).split('\n');
   const expectedLines = normalize(expectedOutput).split('\n');
   const maxLines = Math.max(userLines.length, expectedLines.length);
@@ -83,15 +85,28 @@ export function CodeOutputComparison({
   const [userOutput, setUserOutput] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
+
+  const answerReady = !submitted && !!userOutput.trim() &&
+    getMatchResult(userOutput, expectedOutput).result === 'correct';
 
   const handleCheckOutput = () => {
+    // Clicked submit but missing the trailing newline — nudge, don't grade
+    if (isMissingTrailingNewline(userOutput, expectedOutput)) {
+      setHint('Think about what happens after the last line prints...');
+      return;
+    }
+
     const { result, penalty } = getMatchResult(userOutput, expectedOutput);
     setMatchResult(result);
     setSubmitted(true);
-
-    const isCorrect = result === 'correct';
-    onAnswer(isCorrect, penalty);
+    onAnswer(result === 'correct', penalty);
   };
+
+  // Clear hint when user edits their answer
+  useEffect(() => {
+    if (hint) setHint(null);
+  }, [userOutput]);
 
   const diffs = submitted ? computeDiff(userOutput, expectedOutput) : [];
 
@@ -134,7 +149,17 @@ export function CodeOutputComparison({
               )}
             />
           </div>
-          <Button onClick={handleCheckOutput} disabled={!userOutput.trim()} className="w-full">
+          {hint && (
+            <p className="text-sm text-amber-400 animate-slide-up">{hint}</p>
+          )}
+          <Button
+            onClick={handleCheckOutput}
+            disabled={!userOutput.trim()}
+            className={cn(
+              'w-full transition-all duration-500',
+              answerReady && 'animate-electricity'
+            )}
+          >
             Check Output
           </Button>
         </div>
