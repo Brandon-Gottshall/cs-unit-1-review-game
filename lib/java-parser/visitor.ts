@@ -119,6 +119,65 @@ export class JavaSemanticVisitor extends BaseCstVisitor {
     if (ctx.printStatement) this.visit(ctx.printStatement);
     if (ctx.expressionStatement) this.visit(ctx.expressionStatement);
     if (ctx.block) this.visit(ctx.block);
+    if (ctx.ifStatement) this.visit(ctx.ifStatement);
+    if (ctx.whileStatement) this.visit(ctx.whileStatement);
+    if (ctx.forStatement) this.visit(ctx.forStatement);
+    if (ctx.switchStatement) this.visit(ctx.switchStatement);
+    if (ctx.breakStatement) this.visit(ctx.breakStatement);
+    if (ctx.continueStatement) this.visit(ctx.continueStatement);
+    if (ctx.returnStatement) this.visit(ctx.returnStatement);
+  }
+
+  ifStatement(ctx: any) {
+    ctx.expression?.forEach((e: any) => this.visit(e));
+    ctx.statement?.forEach((s: any) => this.visit(s));
+  }
+
+  whileStatement(ctx: any) {
+    ctx.expression?.forEach((e: any) => this.visit(e));
+    ctx.statement?.forEach((s: any) => this.visit(s));
+  }
+
+  forStatement(ctx: any) {
+    this.pushScope();
+    if (ctx.forInit) ctx.forInit.forEach((f: any) => this.visit(f));
+    ctx.expression?.forEach((e: any) => this.visit(e));
+    ctx.statement?.forEach((s: any) => this.visit(s));
+    this.popScope();
+  }
+
+  forInit(ctx: any) {
+    if (ctx.typeSpec) {
+      const typeStr = this.getTypeString(ctx.typeSpec[0]);
+      const isFinal = !!ctx.Final;
+      const varName = ctx.varName?.[0]?.image;
+      if (varName) {
+        this.declareVar(varName, { type: typeStr, isFinal, line: ctx.varName[0].startLine });
+      }
+      // Comma-separated additional declarators captured under generic Identifier
+      const extras = (ctx.Identifier || []) as any[];
+      for (const id of extras) {
+        this.declareVar(id.image, { type: typeStr, isFinal, line: id.startLine });
+      }
+    }
+    ctx.expression?.forEach((e: any) => this.visit(e));
+  }
+
+  switchStatement(ctx: any) {
+    ctx.expression?.forEach((e: any) => this.visit(e));
+    ctx.switchCase?.forEach((c: any) => this.visit(c));
+  }
+
+  switchCase(ctx: any) {
+    ctx.expression?.forEach((e: any) => this.visit(e));
+    ctx.statement?.forEach((s: any) => this.visit(s));
+  }
+
+  breakStatement(_ctx: any) {}
+  continueStatement(_ctx: any) {}
+
+  returnStatement(ctx: any) {
+    ctx.expression?.forEach((e: any) => this.visit(e));
   }
 
   variableDeclaration(ctx: any) {

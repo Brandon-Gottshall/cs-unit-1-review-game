@@ -43,6 +43,18 @@ export const Short = createToken({ name: "Short", pattern: /short/, longer_alt: 
 export const Long = createToken({ name: "Long", pattern: /long/, longer_alt: Identifier });
 export const Float = createToken({ name: "Float", pattern: /float/, longer_alt: Identifier });
 
+// Control-flow keywords (Ch 3-4)
+export const If = createToken({ name: "If", pattern: /if/, longer_alt: Identifier });
+export const Else = createToken({ name: "Else", pattern: /else/, longer_alt: Identifier });
+export const Switch = createToken({ name: "Switch", pattern: /switch/, longer_alt: Identifier });
+export const Case = createToken({ name: "Case", pattern: /case/, longer_alt: Identifier });
+export const Default = createToken({ name: "Default", pattern: /default/, longer_alt: Identifier });
+export const Break = createToken({ name: "Break", pattern: /break/, longer_alt: Identifier });
+export const Continue = createToken({ name: "Continue", pattern: /continue/, longer_alt: Identifier });
+export const While = createToken({ name: "While", pattern: /while/, longer_alt: Identifier });
+export const For = createToken({ name: "For", pattern: /for/, longer_alt: Identifier });
+export const Return = createToken({ name: "Return", pattern: /return/, longer_alt: Identifier });
+
 // ─── Literals ───────────────────────────────────────────────────
 // Double literal must come before integer to match "3.14" before "3"
 export const DoubleLiteral = createToken({
@@ -87,6 +99,10 @@ export const LessThan = createToken({ name: "LessThan", pattern: /</ });
 export const GreaterThan = createToken({ name: "GreaterThan", pattern: />/ });
 export const Bang = createToken({ name: "Bang", pattern: /!/ });
 
+// Ternary operator
+export const Question = createToken({ name: "Question", pattern: /\?/ });
+export const Colon = createToken({ name: "Colon", pattern: /:/ });
+
 // ─── Delimiters ─────────────────────────────────────────────────
 export const LParen = createToken({ name: "LParen", pattern: /\(/ });
 export const RParen = createToken({ name: "RParen", pattern: /\)/ });
@@ -110,6 +126,8 @@ export const allTokens = [
   Int, Double, StringType, Char, Boolean,
   Final, New, True, False, Null,
   Byte, Short, Long, Float,
+  // Control flow (Ch 3-4)
+  If, Else, Switch, Case, Default, Break, Continue, While, For, Return,
 
   // Literals (double before integer)
   DoubleLiteral,
@@ -127,6 +145,7 @@ export const allTokens = [
   Plus, Minus, Star, Slash, Percent,
   Equals,
   LessThan, GreaterThan, Bang,
+  Question, Colon,
 
   // Delimiters
   LParen, RParen, LBrace, RBrace, LBracket, RBracket,

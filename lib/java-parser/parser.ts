@@ -4,6 +4,8 @@ import {
   // Keywords
   Public, Class, Static, Void, Int, Double, StringType, Char, Boolean,
   Final, New, True, False, Null, Byte, Short, Long, Float,
+  // Control flow (Ch 3-4)
+  If, Else, Switch, Case, Default, Break, Continue, While, For, Return,
   // Literals
   IntegerLiteral, DoubleLiteral, StringLiteral, CharLiteral,
   // Operators
@@ -12,6 +14,7 @@ import {
   PlusPlus, MinusMinus,
   EqualEqual, NotEqual, LessThan, GreaterThan, LessEqual, GreaterEqual,
   And, Or, Bang,
+  Question, Colon,
   // Delimiters
   LParen, RParen, LBrace, RBrace, LBracket, RBracket,
   Semicolon, Comma, Dot,
@@ -20,19 +23,21 @@ import {
 } from "./tokens";
 
 /**
- * Chevrotain CST Parser for a subset of Java (Ch 1-2 scope).
+ * Chevrotain CST Parser for a subset of Java (Ch 1-4 scope).
  *
  * Supports:
  * - Class and main method boilerplate
  * - Variable declarations (int, double, String, char, boolean, byte, short, long, float)
  * - final constants
  * - Assignments and compound assignments (+=, -=, etc.)
- * - Arithmetic expressions with correct precedence
+ * - Arithmetic, relational, equality, logical expressions with correct precedence
+ * - Ternary conditional (?:) — right-associative, between expression and logicalOr
  * - Type casts: (int)x, (double)y
  * - System.out.println / System.out.print
- * - Math.pow, Math.sqrt, Math.abs
+ * - Math.pow, Math.sqrt, Math.abs and chained method calls (s.length(), s.charAt(i), etc.)
  * - String concatenation (handled via + in additive)
  * - Increment/decrement (++, --)
+ * - Control flow: if/else, while, for, switch/case/default, break, continue, return
  * - Comments (handled at lexer level)
  */
 export class JavaSubsetParser extends CstParser {
@@ -126,6 +131,15 @@ export class JavaSubsetParser extends CstParser {
 
   private statement = this.RULE("statement", () => {
     this.OR([
+      // Keyword-led statements (Ch 3-4) — uniquely dispatched by their leading token
+      { ALT: () => this.SUBRULE(this.ifStatement) },
+      { ALT: () => this.SUBRULE(this.whileStatement) },
+      { ALT: () => this.SUBRULE(this.forStatement) },
+      { ALT: () => this.SUBRULE(this.switchStatement) },
+      { ALT: () => this.SUBRULE(this.breakStatement) },
+      { ALT: () => this.SUBRULE(this.continueStatement) },
+      { ALT: () => this.SUBRULE(this.returnStatement) },
+      // Variable declarations: leading Final or typeSpec keyword
       { ALT: () => this.SUBRULE(this.variableDeclaration) },
       {
         // Disambiguate: System.out.println/print starts with Identifier("System").Dot
@@ -138,6 +152,126 @@ export class JavaSubsetParser extends CstParser {
       { ALT: () => this.SUBRULE(this.expressionStatement) },
       { ALT: () => this.SUBRULE(this.block) },
     ]);
+  });
+
+  // ─── Control flow statements (Ch 3-4) ───────────────────────
+  private ifStatement = this.RULE("ifStatement", () => {
+    this.CONSUME(If);
+    this.CONSUME(LParen);
+    this.SUBRULE(this.expression);
+    this.CONSUME(RParen);
+    this.SUBRULE(this.statement);
+    // dangling-else: greedy OPTION binds else to nearest if
+    this.OPTION(() => {
+      this.CONSUME(Else);
+      this.SUBRULE2(this.statement);
+    });
+  });
+
+  private whileStatement = this.RULE("whileStatement", () => {
+    this.CONSUME(While);
+    this.CONSUME(LParen);
+    this.SUBRULE(this.expression);
+    this.CONSUME(RParen);
+    this.SUBRULE(this.statement);
+  });
+
+  private forStatement = this.RULE("forStatement", () => {
+    this.CONSUME(For);
+    this.CONSUME(LParen);
+    // init clause (optional)
+    this.OPTION(() => this.SUBRULE(this.forInit));
+    this.CONSUME(Semicolon);
+    // condition (optional)
+    this.OPTION2(() => this.SUBRULE(this.expression));
+    this.CONSUME2(Semicolon);
+    // update (optional) — list of expression statements (no semicolons between)
+    this.OPTION3(() => {
+      this.SUBRULE2(this.expression);
+      this.MANY(() => {
+        this.CONSUME(Comma);
+        this.SUBRULE3(this.expression);
+      });
+    });
+    this.CONSUME(RParen);
+    this.SUBRULE(this.statement);
+  });
+
+  // for-init: either a typed declaration (int i = 0) or a bare expression.
+  // Differs from variableDeclaration in that it does NOT consume a trailing semicolon.
+  private forInit = this.RULE("forInit", () => {
+    this.OR([
+      {
+        GATE: () => this.isTypeStart(),
+        ALT: () => {
+          this.OPTION(() => this.CONSUME(Final));
+          this.SUBRULE(this.typeSpec);
+          this.CONSUME(Identifier, { LABEL: "varName" });
+          this.OPTION2(() => {
+            this.CONSUME(Equals);
+            this.SUBRULE(this.expression);
+          });
+          // Allow comma-separated additional declarators: int i = 0, j = 10
+          this.MANY(() => {
+            this.CONSUME(Comma);
+            this.CONSUME2(Identifier);
+            this.OPTION3(() => {
+              this.CONSUME2(Equals);
+              this.SUBRULE2(this.expression);
+            });
+          });
+        },
+      },
+      { ALT: () => this.SUBRULE3(this.expression) },
+    ]);
+  });
+
+  private switchStatement = this.RULE("switchStatement", () => {
+    this.CONSUME(Switch);
+    this.CONSUME(LParen);
+    this.SUBRULE(this.expression);
+    this.CONSUME(RParen);
+    this.CONSUME(LBrace);
+    this.MANY(() => this.SUBRULE(this.switchCase));
+    this.CONSUME(RBrace);
+  });
+
+  private switchCase = this.RULE("switchCase", () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(Case);
+          this.SUBRULE(this.expression);
+          this.CONSUME(Colon);
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(Default);
+          this.CONSUME2(Colon);
+        },
+      },
+    ]);
+    // Body: zero or more statements until next case/default/}
+    this.MANY(() => {
+      this.SUBRULE(this.statement);
+    });
+  });
+
+  private breakStatement = this.RULE("breakStatement", () => {
+    this.CONSUME(Break);
+    this.CONSUME(Semicolon);
+  });
+
+  private continueStatement = this.RULE("continueStatement", () => {
+    this.CONSUME(Continue);
+    this.CONSUME(Semicolon);
+  });
+
+  private returnStatement = this.RULE("returnStatement", () => {
+    this.CONSUME(Return);
+    this.OPTION(() => this.SUBRULE(this.expression));
+    this.CONSUME(Semicolon);
   });
 
   private variableDeclaration = this.RULE("variableDeclaration", () => {
@@ -208,6 +342,13 @@ export class JavaSubsetParser extends CstParser {
   // ─── Expressions (precedence climbing) ──────────────────────
   private expression = this.RULE("expression", () => {
     this.SUBRULE(this.logicalOrExpression);
+    // Ternary: cond ? then : else (right-associative via recursive expression on branches)
+    this.OPTION(() => {
+      this.CONSUME(Question);
+      this.SUBRULE2(this.expression);
+      this.CONSUME(Colon);
+      this.SUBRULE3(this.expression);
+    });
   });
 
   private logicalOrExpression = this.RULE("logicalOrExpression", () => {
@@ -389,7 +530,17 @@ export class JavaSubsetParser extends CstParser {
     });
   });
 
-  // ─── Lookahead helper for type cast disambiguation ──────────
+  // ─── Lookahead helpers ──────────────────────────────────────
+  private isTypeStart(): boolean {
+    let i = 1;
+    if (this.LA(i).tokenType === Final) i++;
+    const t = this.LA(i).tokenType;
+    return (
+      t === Int || t === Double || t === StringType || t === Char ||
+      t === Boolean || t === Byte || t === Short || t === Long || t === Float
+    );
+  }
+
   private isCast(): boolean {
     // Peek: ( <type_keyword> )
     // This is a simplification — works for primitive casts

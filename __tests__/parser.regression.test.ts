@@ -87,6 +87,35 @@ describe('Ch 1-2 Java patterns parse correctly', () => {
   });
 });
 
+// ─── Test 2b: Ch 3-4 patterns (branches, loops, switch, ternary) ─
+describe('Ch 3-4 Java patterns parse correctly', () => {
+  const validStatements = [
+    ['if statement', 'int x = 5;\nif (x > 0) { System.out.println("pos"); }'],
+    ['if-else', 'int x = 5;\nif (x > 0) { System.out.println("pos"); } else { System.out.println("np"); }'],
+    ['if-else-if-else', 'int x = 0;\nif (x > 0) { System.out.println("p"); } else if (x < 0) { System.out.println("n"); } else { System.out.println("z"); }'],
+    ['logical and/or/not', 'int x = 5;\nif (x > 0 && x < 10 || !(x == 0)) { System.out.println(x); }'],
+    ['ternary', 'int x = 5;\nint y = (x > 0) ? 1 : -1;'],
+    ['nested ternary', 'int x = 5;\nint y = x > 0 ? 1 : x < 0 ? -1 : 0;'],
+    ['while loop', 'int i = 0;\nwhile (i < 10) { i++; }'],
+    ['for loop', 'for (int i = 0; i < 10; i++) { System.out.println(i); }'],
+    ['for with multiple updates', 'for (int i = 0, j = 10; i < j; i++, j--) { System.out.println(i); }'],
+    ['nested for', 'for (int i = 0; i < 3; i++) { for (int j = 0; j < 3; j++) { System.out.println(i + j); } }'],
+    ['break in loop', 'int i = 0;\nwhile (true) { if (i > 5) { break; } i++; }'],
+    ['continue in loop', 'for (int i = 0; i < 10; i++) { if (i == 5) { continue; } System.out.println(i); }'],
+    ['switch with fallthrough', 'int x = 1;\nswitch (x) { case 1: case 2: System.out.println("a"); break; default: System.out.println("d"); }'],
+    ['string charAt', 'String s = "hi";\nchar c = s.charAt(0);'],
+    ['string substring', 'String s = "hello";\nString t = s.substring(0, 3);'],
+    ['string equals', 'String a = "x";\nString b = "y";\nif (a.equals(b)) { System.out.println("eq"); }'],
+  ] as const;
+
+  for (const [label, code] of validStatements) {
+    it(`parses: ${label}`, () => {
+      const result = parseJava(code, 'statements');
+      expect(result.success, `errors: ${JSON.stringify(result.errors)}`).toBe(true);
+    });
+  }
+});
+
 // ─── Test 3: Error detection works ───────────────────────────
 // The parser's diagnostic value depends on catching real errors.
 describe('Error detection', () => {
