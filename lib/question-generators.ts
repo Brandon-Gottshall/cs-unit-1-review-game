@@ -630,6 +630,345 @@ const charsStringsGenerator: QuestionGenerator = {
 };
 
 // ---------------------------------------------------------------------------
+// 9. equality-ops  (predict_output) – Chapter 3, section 3.1
+// ---------------------------------------------------------------------------
+
+const branchEqualGenerator: QuestionGenerator = {
+  concept: 'equality-ops',
+  type: 'predict_output',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    type Variant = 'int-equal' | 'int-not-equal' | 'char-equal';
+    const variant: Variant = pick(rng, ['int-equal', 'int-not-equal', 'char-equal'] as const);
+
+    let code: string;
+    let correct: string;
+
+    if (variant === 'int-equal') {
+      const a = randInt(rng, 1, 9);
+      const b = a; // always equal so branch fires
+      code = wrapMain('BranchEqual', `int a = ${a};\nint b = ${b};\nif (a == b) {\n    System.out.println("equal");\n} else {\n    System.out.println("not equal");\n}`);
+      correct = 'equal';
+    } else if (variant === 'int-not-equal') {
+      const a = randInt(rng, 1, 9);
+      const b = a + randInt(rng, 1, 5);
+      code = wrapMain('BranchEqual', `int a = ${a};\nint b = ${b};\nif (a == b) {\n    System.out.println("equal");\n} else {\n    System.out.println("not equal");\n}`);
+      correct = 'not equal';
+    } else {
+      const chars = ['A', 'B', 'C', 'Z'] as const;
+      const ch = pick(rng, chars);
+      const same = rng() > 0.5;
+      const ch2 = same ? ch : pick(rng, chars.filter(c => c !== ch));
+      code = wrapMain('BranchChar', `char c1 = '${ch}';\nchar c2 = '${ch2}';\nif (c1 == c2) {\n    System.out.println("match");\n} else {\n    System.out.println("no match");\n}`);
+      correct = same ? 'match' : 'no match';
+    }
+
+    const wrong = correct === 'equal' ? 'not equal' : correct === 'not equal' ? 'equal' : correct === 'match' ? 'no match' : 'match';
+    return {
+      id: `gen-equality-ops-${seed}`,
+      concept: 'equality-ops',
+      chapter: 3,
+      type: 'predict_output',
+      question: `What does this program print?\n\n\`\`\`java\n${code}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, [wrong, 'true', 'false']),
+      explanation: `The == operator compares primitive values directly. The condition evaluates to ${correct === 'equal' || correct === 'match' ? 'true' : 'false'}, so the corresponding branch executes.`,
+      interactive: { outputData: { code, expectedOutput: correct + '\n' } },
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 10. range-comparisons  (predict_output) – Chapter 3, section 3.2
+// ---------------------------------------------------------------------------
+
+const branchRangeGenerator: QuestionGenerator = {
+  concept: 'range-comparisons',
+  type: 'predict_output',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    const lo = randInt(rng, 1, 10);
+    const hi = lo + randInt(rng, 5, 15);
+    const offset = randInt(rng, -2, hi - lo + 2);
+    const x = lo + offset;
+    const inside = x >= lo && x <= hi;
+    const code = wrapMain('RangeCheck',
+      `int x = ${x};\nif (x >= ${lo} && x <= ${hi}) {\n    System.out.println("in range");\n} else {\n    System.out.println("out of range");\n}`);
+    const correct = inside ? 'in range' : 'out of range';
+
+    return {
+      id: `gen-range-comparisons-${seed}`,
+      concept: 'range-comparisons',
+      chapter: 3,
+      type: 'predict_output',
+      question: `What does this program print?\n\n\`\`\`java\n${code}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, ['in range', 'out of range', 'true', 'false']),
+      explanation: `x = ${x}. The condition x >= ${lo} is ${x >= lo} and x <= ${hi} is ${x <= hi}. Both must be true (&&) for "in range". Result: ${correct}.`,
+      interactive: { outputData: { code, expectedOutput: correct + '\n' } },
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 11. logical-and-or-not  (predict_output) – Chapter 3, section 3.3
+// ---------------------------------------------------------------------------
+
+const logicalOpsGenerator: QuestionGenerator = {
+  concept: 'logical-and-or-not',
+  type: 'predict_output',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    type Op = '&&' | '||' | '!';
+    const op: Op = pick(rng, ['&&', '||', '!'] as const);
+    let code: string;
+    let correct: string;
+
+    if (op === '!') {
+      const b = rng() > 0.5;
+      code = wrapMain('LogicalNot', `boolean b = ${b};\nSystem.out.println(!b);`);
+      correct = String(!b);
+    } else {
+      const a = rng() > 0.5;
+      const b = rng() > 0.5;
+      const result = op === '&&' ? (a && b) : (a || b);
+      code = wrapMain('LogicalOp', `boolean a = ${a};\nboolean b = ${b};\nSystem.out.println(a ${op} b);`);
+      correct = String(result);
+    }
+
+    return {
+      id: `gen-logical-and-or-not-${seed}`,
+      concept: 'logical-and-or-not',
+      chapter: 3,
+      type: 'predict_output',
+      question: `What does this program print?\n\n\`\`\`java\n${code}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, ['true', 'false', '1', '0']),
+      explanation: `Evaluating the logical expression produces ${correct}.`,
+      interactive: { outputData: { code, expectedOutput: correct + '\n' } },
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 12. while-loop  (trace_variables) – Chapter 4, section 4.2
+// ---------------------------------------------------------------------------
+
+const whileLoopGenerator: QuestionGenerator = {
+  concept: 'while-loop',
+  type: 'trace_variables',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    const start = randInt(rng, 0, 3);
+    const limit = start + randInt(rng, 3, 6);
+    const step = randInt(rng, 1, 3);
+
+    // Compute final values
+    let i = start;
+    let sum = 0;
+    while (i < limit) {
+      sum += i;
+      i += step;
+    }
+
+    const code = wrapMain('WhileTrace',
+      `int i = ${start};\nint sum = 0;\nwhile (i < ${limit}) {\n    sum += i;\n    i += ${step};\n}\nSystem.out.println("i=" + i + " sum=" + sum);`);
+    const correct = `i=${i} sum=${sum}`;
+
+    return {
+      id: `gen-while-loop-${seed}`,
+      concept: 'while-loop',
+      chapter: 4,
+      type: 'trace_variables',
+      question: `Trace the loop and determine the final values of \`i\` and \`sum\`:\n\n\`\`\`java\nint i = ${start};\nint sum = 0;\nwhile (i < ${limit}) {\n    sum += i;\n    i += ${step};\n}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, [
+        `i=${i - step} sum=${sum - (i - step)}`,
+        `i=${limit} sum=${sum + 1}`,
+        `i=${i} sum=${sum - step}`,
+      ]),
+      explanation: `The loop runs while i < ${limit}, starting at ${start} and incrementing by ${step} each iteration. After the loop: i = ${i}, sum = ${sum}.`,
+      interactive: {
+        outputData: { code, expectedOutput: correct + '\n' },
+        variantData: { code, finalValues: { i, sum }, steps: [`i starts at ${start}`, `loop runs until i >= ${limit}`, `final: i=${i}, sum=${sum}`] },
+      },
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 13. for-loop  (predict_output) – Chapter 4, section 4.3
+// ---------------------------------------------------------------------------
+
+const forLoopGenerator: QuestionGenerator = {
+  concept: 'for-loop',
+  type: 'predict_output',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    const start = randInt(rng, 0, 3);
+    const limit = start + randInt(rng, 3, 6);
+    // Accumulate sum of i
+    let total = 0;
+    for (let i = start; i < limit; i++) total += i;
+
+    const code = wrapMain('ForLoop',
+      `int total = 0;\nfor (int i = ${start}; i < ${limit}; i++) {\n    total += i;\n}\nSystem.out.println(total);`);
+    const correct = String(total);
+
+    return {
+      id: `gen-for-loop-${seed}`,
+      concept: 'for-loop',
+      chapter: 4,
+      type: 'predict_output',
+      question: `What does this program print?\n\n\`\`\`java\n${code}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, [
+        String(total + 1),
+        String(total - 1),
+        String(limit - start),
+        String(total * 2),
+      ]),
+      explanation: `The loop sums i from ${start} to ${limit - 1} (inclusive). Total = ${total}.`,
+      interactive: { outputData: { code, expectedOutput: correct + '\n' } },
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 14. nested-loops  (predict_output) – Chapter 4, section 4.4
+// ---------------------------------------------------------------------------
+
+const nestedLoopsGenerator: QuestionGenerator = {
+  concept: 'nested-loops',
+  type: 'predict_output',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    const rows = randInt(rng, 2, 4);
+    const cols = randInt(rng, 2, 4);
+
+    // Count total inner iterations
+    const total = rows * cols;
+    const code = wrapMain('NestedLoop',
+      `int count = 0;\nfor (int i = 0; i < ${rows}; i++) {\n    for (int j = 0; j < ${cols}; j++) {\n        count++;\n    }\n}\nSystem.out.println(count);`);
+    const correct = String(total);
+
+    return {
+      id: `gen-nested-loops-${seed}`,
+      concept: 'nested-loops',
+      chapter: 4,
+      type: 'predict_output',
+      question: `What does this program print?\n\n\`\`\`java\n${code}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, [
+        String(rows + cols),
+        String(rows),
+        String(cols),
+        String(total + 1),
+      ]),
+      explanation: `The outer loop runs ${rows} times. For each outer iteration, the inner loop runs ${cols} times. Total increments: ${rows} × ${cols} = ${total}.`,
+      interactive: { outputData: { code, expectedOutput: correct + '\n' } },
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 15. loops-strings  (predict_output) – Chapter 4, section 4.6
+// ---------------------------------------------------------------------------
+
+const stringIterationGenerator: QuestionGenerator = {
+  concept: 'loops-strings',
+  type: 'predict_output',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    const words = ['hello', 'java', 'loop', 'code', 'world'] as const;
+    const word = pick(rng, words);
+    const targetChar = word[randInt(rng, 0, word.length - 1)]!;
+    let count = 0;
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === targetChar) count++;
+    }
+
+    const code = wrapMain('StringLoop',
+      `String s = "${word}";\nint count = 0;\nfor (int i = 0; i < s.length(); i++) {\n    if (s.charAt(i) == '${targetChar}') {\n        count++;\n    }\n}\nSystem.out.println(count);`);
+    const correct = String(count);
+
+    return {
+      id: `gen-loops-strings-${seed}`,
+      concept: 'loops-strings',
+      chapter: 4,
+      type: 'predict_output',
+      question: `What does this program print?\n\n\`\`\`java\n${code}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, [
+        String(word.length),
+        String(count + 1),
+        String(count > 0 ? count - 1 : 1),
+        '0',
+      ]),
+      explanation: `The loop scans every character of "${word}" and counts occurrences of '${targetChar}'. There ${count === 1 ? 'is' : 'are'} ${count} occurrence${count === 1 ? '' : 's'}.`,
+      interactive: { outputData: { code, expectedOutput: correct + '\n' } },
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// 16. switch-statement  (predict_output) – Chapter 3, section 3.6
+// ---------------------------------------------------------------------------
+
+const switchStatementGenerator: QuestionGenerator = {
+  concept: 'switch-statement',
+  type: 'predict_output',
+  generate(seed: number): CSUnifiedQuestion {
+    const rng = mulberry32(seed);
+    rng();
+
+    const val = randInt(rng, 1, 4);
+    const hasFallthrough = rng() > 0.6;
+
+    let code: string;
+    let correct: string;
+
+    if (hasFallthrough && val <= 2) {
+      // val 1 falls through to val 2
+      code = wrapMain('SwitchFall',
+        `int x = ${val};\nswitch (x) {\n    case 1:\n    case 2:\n        System.out.println("low");\n        break;\n    case 3:\n        System.out.println("mid");\n        break;\n    default:\n        System.out.println("other");\n}`);
+      correct = val <= 2 ? 'low' : val === 3 ? 'mid' : 'other';
+    } else {
+      code = wrapMain('SwitchBasic',
+        `int x = ${val};\nswitch (x) {\n    case 1:\n        System.out.println("one");\n        break;\n    case 2:\n        System.out.println("two");\n        break;\n    case 3:\n        System.out.println("three");\n        break;\n    default:\n        System.out.println("other");\n}`);
+      correct = val === 1 ? 'one' : val === 2 ? 'two' : val === 3 ? 'three' : 'other';
+    }
+
+    return {
+      id: `gen-switch-statement-${seed}`,
+      concept: 'switch-statement',
+      chapter: 3,
+      type: 'predict_output',
+      question: `What does this program print?\n\n\`\`\`java\n${code}\n\`\`\``,
+      correctAnswer: correct,
+      distractors: cleanDistractors(correct, ['one', 'two', 'three', 'low', 'mid', 'other'].filter(s => s !== correct)),
+      explanation: `x = ${val}. The switch matches case ${val <= 2 && hasFallthrough ? '1/2 (fallthrough)' : val}, printing "${correct}".`,
+      interactive: { outputData: { code, expectedOutput: correct + '\n' } },
+    };
+  },
+};
+
+
+// ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
 
@@ -642,6 +981,15 @@ export const generators: QuestionGenerator[] = [
   variablesAssignmentsGenerator,
   binaryGenerator,
   charsStringsGenerator,
+  // Ch3-4 generators
+  branchEqualGenerator,
+  branchRangeGenerator,
+  logicalOpsGenerator,
+  whileLoopGenerator,
+  forLoopGenerator,
+  nestedLoopsGenerator,
+  stringIterationGenerator,
+  switchStatementGenerator,
 ];
 
 /**
