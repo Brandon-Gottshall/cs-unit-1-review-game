@@ -14,6 +14,11 @@
  * - code_analysis: Analyze code behavior
  */
 
+import type {
+  InteractiveData as CoreInteractiveData,
+  Question,
+} from '@brandon-gottshall/review-game-core';
+
 export type CSQuestionType =
   | 'vocabulary'
   | 'true_false'
@@ -52,28 +57,18 @@ export interface ProgramData {
   hints?: string[];           // progressive hints
 }
 
-export interface InteractiveData {
-  code?: string;
+export interface CSInteractiveData extends CoreInteractiveData {
   variantData?: VariableTraceData;
   outputData?: CodeOutputData;
   errorData?: ErrorData;
   programData?: ProgramData;
 }
 
-export interface CSUnifiedQuestion {
-  id: string;
-  concept: string;
+export type CSUnifiedQuestion = Question<CSQuestionType> & {
   chapter: number;
   section?: string;
-  type: CSQuestionType;
-  question: string;
-  correctAnswer: string;
-  distractors?: string[];
-  explanation?: string;
-  keyFacts?: string[];
-  formula?: string;
-  interactive?: InteractiveData;
-}
+  interactive?: CSInteractiveData;
+};
 
 // ============================================
 // CHAPTER 1: INTRODUCTION TO JAVA

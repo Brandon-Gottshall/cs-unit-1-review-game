@@ -5,27 +5,40 @@
  * Mastering prerequisites unlocks new concepts.
  * Questions are mapped to concepts by their generated IDs.
  *
- * Structure covers Introduction to Java (Chapters 1-2)
+ * Structure covers Introduction to Java through loops (Chapters 1-4).
  */
 
-export interface ConceptNode {
-  id: string;
-  name: string;
-  description: string;
-  prerequisites: string[];
-  questionIds: string[];  // Question IDs that belong to this concept
-  chapter: number;
-  // Visual positioning (for skill tree layout)
-  x?: number;  // 0-100 percentage
-  y?: number;  // 0-100 percentage
-}
+import {
+  MASTERY_THRESHOLD,
+  calculateTreeProgress,
+  getConceptMastery,
+  getMasteredConcepts,
+  getNextUnlockedConcepts,
+  getUnlockedQuestionIds,
+  isConceptUnlocked,
+  populateConceptQuestions,
+  type ConceptNode,
+  type ConceptTree,
+  type MasteryData,
+  type QuestionForMapping,
+} from '@brandon-gottshall/review-game-core';
 
-export type ConceptTree = ConceptNode[];
-
-export type MasteryData = Record<string, { correct: number; total: number }>;
-
-// Threshold for considering a concept "mastered" (70%)
-export const MASTERY_THRESHOLD = 0.7;
+export type {
+  ConceptNode,
+  ConceptTree,
+  MasteryData,
+  QuestionForMapping,
+};
+export {
+  MASTERY_THRESHOLD,
+  calculateTreeProgress,
+  getConceptMastery,
+  getMasteredConcepts,
+  getNextUnlockedConcepts,
+  getUnlockedQuestionIds,
+  isConceptUnlocked,
+  populateConceptQuestions,
+};
 
 /**
  * The actual concept tree for CS-1301
@@ -290,6 +303,7 @@ export const conceptTree: ConceptTree = [
     x: 65,
     y: 92,
   },
+
   // ======================================================
   // === CHAPTER 3: BRANCHES ==============================
   // ======================================================
@@ -612,176 +626,4 @@ export function getQuestionConcept(
 
   // Chapter-based fallback
   return chapter === 1 ? 'programming-basics' : 'variables-assignments';
-}
-
-/**
- * Calculate mastery percentage for a concept
- * @returns 0-1 representing mastery percentage
- */
-export function getConceptMastery(
-  conceptId: string,
-  questionIds: string[],
-  masteryData: MasteryData
-): number {
-  if (questionIds.length === 0) return 0;
-
-  let totalCorrect = 0;
-  let totalAttempts = 0;
-
-  for (const qId of questionIds) {
-    const data = masteryData[qId];
-    if (data) {
-      totalCorrect += data.correct;
-      totalAttempts += data.total;
-    }
-  }
-
-  if (totalAttempts === 0) return 0;
-  return totalCorrect / totalAttempts;
-}
-
-/**
- * Check if a concept is unlocked based on prerequisite mastery
- */
-export function isConceptUnlocked(
-  conceptId: string,
-  tree: ConceptTree,
-  masteryData: MasteryData
-): boolean {
-  const concept = tree.find(c => c.id === conceptId);
-  if (!concept) return false;
-
-  // Root concepts (no prerequisites) are always unlocked
-  if (concept.prerequisites.length === 0) return true;
-
-  // Check all prerequisites are mastered
-  for (const prereqId of concept.prerequisites) {
-    const prereq = tree.find(c => c.id === prereqId);
-    if (!prereq) continue;
-
-    const mastery = getConceptMastery(prereqId, prereq.questionIds, masteryData);
-    if (mastery < MASTERY_THRESHOLD) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
- * Get all question IDs from unlocked concepts
- */
-export function getUnlockedQuestionIds(
-  tree: ConceptTree,
-  masteryData: MasteryData
-): string[] {
-  const unlocked: string[] = [];
-
-  for (const concept of tree) {
-    if (isConceptUnlocked(concept.id, tree, masteryData)) {
-      unlocked.push(...concept.questionIds);
-    }
-  }
-
-  return unlocked;
-}
-
-/**
- * Get IDs of all mastered concepts (>= 70% mastery)
- */
-export function getMasteredConcepts(
-  tree: ConceptTree,
-  masteryData: MasteryData
-): string[] {
-  return tree
-    .filter(concept => {
-      const mastery = getConceptMastery(concept.id, concept.questionIds, masteryData);
-      return mastery >= MASTERY_THRESHOLD;
-    })
-    .map(c => c.id);
-}
-
-/**
- * Get concepts that are unlocked but not yet mastered (next to work on)
- */
-export function getNextUnlockedConcepts(
-  tree: ConceptTree,
-  masteryData: MasteryData
-): ConceptNode[] {
-  return tree.filter(concept => {
-    const unlocked = isConceptUnlocked(concept.id, tree, masteryData);
-    const mastery = getConceptMastery(concept.id, concept.questionIds, masteryData);
-    return unlocked && mastery < MASTERY_THRESHOLD;
-  });
-}
-
-/**
- * Calculate overall progress through the concept tree
- */
-export function calculateTreeProgress(
-  tree: ConceptTree,
-  masteryData: MasteryData
-): {
-  totalConcepts: number;
-  masteredConcepts: number;
-  unlockedConcepts: number;
-  lockedConcepts: number;
-  percentComplete: number;
-} {
-  let mastered = 0;
-  let unlocked = 0;
-  let locked = 0;
-
-  for (const concept of tree) {
-    const isUnlocked = isConceptUnlocked(concept.id, tree, masteryData);
-    const mastery = getConceptMastery(concept.id, concept.questionIds, masteryData);
-
-    if (mastery >= MASTERY_THRESHOLD) {
-      mastered++;
-      unlocked++; // Mastered concepts are also unlocked
-    } else if (isUnlocked) {
-      unlocked++;
-    } else {
-      locked++;
-    }
-  }
-
-  return {
-    totalConcepts: tree.length,
-    masteredConcepts: mastered,
-    unlockedConcepts: unlocked,
-    lockedConcepts: locked,
-    percentComplete: tree.length > 0 ? (mastered / tree.length) * 100 : 0,
-  };
-}
-
-/**
- * Question data needed for concept mapping
- */
-export interface QuestionForMapping {
-  id: string;
-  concept: string;
-  question: string;
-  type: string;
-  chapter: number;
-}
-
-/**
- * Populate concept tree with actual question IDs from the pool.
- * Uses the explicit `concept` field on each question.
- */
-export function populateConceptQuestions(
-  tree: ConceptTree,
-  questions: QuestionForMapping[]
-): ConceptTree {
-  const populated = tree.map(c => ({ ...c, questionIds: [] as string[] }));
-
-  for (const q of questions) {
-    const concept = populated.find(c => c.id === q.concept);
-    if (concept) {
-      concept.questionIds.push(q.id);
-    }
-  }
-
-  return populated;
 }
