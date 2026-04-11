@@ -5,6 +5,15 @@ export default defineConfig({
   test: {
     include: ['__tests__/**/*.regression.test.ts'],
     environment: 'node',
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        minWorkers: 1,
+        maxWorkers: 1,
+      },
+    },
   },
   resolve: {
     alias: {

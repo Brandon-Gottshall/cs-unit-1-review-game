@@ -6,6 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  transpilePackages: ['@brandon-gottshall/review-game-core'],
 };
 
 export default nextConfig;
