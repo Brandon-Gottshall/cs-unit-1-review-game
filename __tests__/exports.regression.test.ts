@@ -60,6 +60,26 @@ describe('lib/spaced-repetition exports', () => {
   });
 });
 
+describe('lib/question-generators exports', () => {
+  it('exports generators array and generateForConcept function', async () => {
+    const mod = await import('../lib/question-generators');
+    expect(mod.generators).toBeDefined();
+    expect(Array.isArray(mod.generators)).toBe(true);
+    expect(mod.generators.length).toBeGreaterThanOrEqual(16);
+    expect(mod.generateForConcept).toBeTypeOf('function');
+
+    // Verify all 8 Ch3-4 generator concepts are registered
+    const ch34Concepts = new Set([
+      'equality-ops', 'range-comparisons', 'logical-and-or-not',
+      'while-loop', 'for-loop', 'nested-loops', 'loops-strings', 'switch-statement',
+    ]);
+    const registeredConcepts = new Set(mod.generators.map((g: { concept: string }) => g.concept));
+    for (const concept of ch34Concepts) {
+      expect(registeredConcepts.has(concept), `Generator for "${concept}" not registered`).toBe(true);
+    }
+  });
+});
+
 describe('components/interactive barrel exports', () => {
   it('exports all three interactive components', async () => {
     const mod = await import('../components/interactive');

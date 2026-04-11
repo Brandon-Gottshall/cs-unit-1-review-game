@@ -18,6 +18,7 @@ import { execSync } from 'child_process';
 import { writeFileSync, mkdirSync, rmSync } from 'fs';
 import path from 'path';
 import { unifiedQuestionPool } from '@/lib/cs-game-data';
+import { generators } from '@/lib/question-generators';
 
 const JAVA_TMP = path.join('/tmp', 'cs1301-java-tests');
 
@@ -118,16 +119,21 @@ function generateTracePrintlns(vars: Map<string, string>): string {
 // predict_output: run code, assert stdout matches correctAnswer
 // ═══════════════════════════════════════════════════════════════════════
 describe('predict_output: actual Java output matches correctAnswer', () => {
-  const outputQuestions = unifiedQuestionPool.filter(q => q.type === 'predict_output');
+  // Include questions that have either a formula or an outputData.code for execution
+  const outputQuestions = unifiedQuestionPool.filter(
+    q => q.type === 'predict_output' && (q.formula || q.interactive?.outputData?.code)
+  );
 
   it.each(
     outputQuestions.map(q => [q.id, q])
   )('%s', (_id, q) => {
-    const source = wrapInMain(q.formula!);
+    // Prefer the full class in outputData.code; fall back to bare-statements formula
+    const rawCode = q.interactive?.outputData?.code ?? q.formula ?? '';
+    const source = wrapInMain(rawCode);
     const result = runJava(source, q.id);
 
     expect(result.exitCode, `Java execution failed for ${q.id}:\n${result.stderr || result.stdout}`).toBe(0);
-    expect(result.stdout, `Output mismatch for ${q.id}:\nCode: ${q.formula}\nExpected: "${q.correctAnswer}"\nActual: "${result.stdout}"`).toBe(q.correctAnswer);
+    expect(result.stdout, `Output mismatch for ${q.id}:\nExpected: "${q.correctAnswer}"\nActual: "${result.stdout}"`).toBe(q.correctAnswer);
   });
 });
 
@@ -190,5 +196,31 @@ describe('identify_error: code should fail to compile', () => {
       result.exitCode,
       `${q.id}: Expected compilation failure but code ran successfully!\nCode: ${q.formula}\nOutput: ${result.stdout}`
     ).not.toBe(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Ch3-4 generators: seeded output matches correctAnswer
+// ═══════════════════════════════════════════════════════════════════════
+describe('generators: seeded output matches correctAnswer', () => {
+  const CH34_CONCEPTS = new Set([
+    'equality-ops', 'range-comparisons', 'logical-and-or-not',
+    'while-loop', 'for-loop', 'nested-loops', 'loops-strings', 'switch-statement',
+  ]);
+  const ch34Generators = generators.filter(g => CH34_CONCEPTS.has(g.concept));
+  const FIXED_SEED = 42;
+
+  it.each(
+    ch34Generators.map(g => [g.id, g])
+  )('%s', (_id, g) => {
+    const q = g.generate(FIXED_SEED);
+    const rawCode = q.interactive?.outputData?.code ?? '';
+    expect(rawCode, `Generator ${g.id} produced no outputData.code`).toBeTruthy();
+
+    const source = wrapInMain(rawCode);
+    const result = runJava(source, `gen-${g.id}`);
+
+    expect(result.exitCode, `Generator ${g.id} execution failed:\n${result.stderr || result.stdout}`).toBe(0);
+    expect(result.stdout, `Generator ${g.id}: Expected "${q.correctAnswer}" but got "${result.stdout}"`).toBe(q.correctAnswer);
   });
 });
