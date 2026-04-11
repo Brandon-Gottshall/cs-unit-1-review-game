@@ -1,6 +1,6 @@
 /**
  * CS-1301 Review Game - Unified Question Pool
- * Chapters 1-2: Introduction to Java & Variables & Assignments
+ * Chapters 1-4: Introduction to Java, Variables, Branches, and Loops
  *
  * Question Types:
  * - vocabulary: Java terminology and concepts
@@ -1973,6 +1973,1131 @@ const writeProgramChallenges: CSUnifiedQuestion[] = [
   },
 ];
 
+// ============================================
+// CHAPTER 3: BRANCHES
+// ============================================
+
+// 3.1: Boolean type & if-else
+const ch3BooleanIfElse: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-bool-001',
+    concept: 'boolean-type',
+    chapter: 3,
+    section: '3.1',
+    type: 'vocabulary',
+    question: 'What are the only two possible values of a boolean variable in Java?',
+    correctAnswer: 'true and false',
+    distractors: ['0 and 1', 'yes and no', 'on and off'],
+    explanation: 'Java\'s boolean type can only hold the literals true or false (lowercase).',
+  },
+  {
+    id: 'ch3-bool-002',
+    concept: 'boolean-type',
+    chapter: 3,
+    section: '3.1',
+    type: 'true_false',
+    question: 'In Java, the value True (capital T) is equivalent to the boolean literal true.',
+    correctAnswer: 'False',
+    distractors: ['True'],
+    explanation: 'Java is case-sensitive. Only lowercase true and false are valid boolean literals. True with a capital T is a compile error.',
+  },
+  {
+    id: 'ch3-bool-003',
+    concept: 'if-else',
+    chapter: 3,
+    section: '3.2',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint x = 7;\nif (x > 5) {\n    System.out.println("big");\n} else {\n    System.out.println("small");\n}\n```',
+    correctAnswer: 'big',
+    distractors: ['small', 'big\nsmall', '7'],
+    explanation: '7 > 5 is true, so the if-branch executes and prints "big".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int x = 7;\n        if (x > 5) {\n            System.out.println("big");\n        } else {\n            System.out.println("small");\n        }\n    }\n}',
+        expectedOutput: 'big\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-bool-004',
+    concept: 'if-else',
+    chapter: 3,
+    section: '3.2',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint score = 72;\nif (score >= 90) {\n    System.out.println("A");\n} else if (score >= 80) {\n    System.out.println("B");\n} else if (score >= 70) {\n    System.out.println("C");\n} else {\n    System.out.println("F");\n}\n```',
+    correctAnswer: 'C',
+    distractors: ['A', 'B', 'F'],
+    explanation: 'score = 72. 72 >= 90 is false, 72 >= 80 is false, 72 >= 70 is true → prints "C".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int score = 72;\n        if (score >= 90) { System.out.println("A"); }\n        else if (score >= 80) { System.out.println("B"); }\n        else if (score >= 70) { System.out.println("C"); }\n        else { System.out.println("F"); }\n    }\n}',
+        expectedOutput: 'C\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-bool-005',
+    concept: 'if-else',
+    chapter: 3,
+    section: '3.2',
+    type: 'complete_code',
+    question: 'Complete the if-else so it prints "even" if n is even, otherwise "odd":\n\n```java\nint n = 9;\nif (___) {\n    System.out.println("even");\n} else {\n    System.out.println("odd");\n}\n```',
+    correctAnswer: 'n % 2 == 0',
+    distractors: ['n / 2 == 0', 'n % 2 = 0', 'n == 2'],
+    explanation: 'The modulo operator % gives the remainder. n % 2 == 0 is true when n is evenly divisible by 2.',
+  },
+];
+
+// 3.2: Equality operators
+const ch3EqualityOps: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-eq-001',
+    concept: 'equality-ops',
+    chapter: 3,
+    section: '3.3',
+    type: 'vocabulary',
+    question: 'What is the equality operator in Java (tests whether two values are equal)?',
+    correctAnswer: '==',
+    distractors: ['=', '.equals()', '==='],
+    explanation: '== is the equality operator. = is assignment. .equals() is for object content comparison. === does not exist in Java.',
+  },
+  {
+    id: 'ch3-eq-002',
+    concept: 'equality-ops',
+    chapter: 3,
+    section: '3.3',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint a = 5;\nint b = 5;\nSystem.out.println(a == b);\nSystem.out.println(a != b);\n```',
+    correctAnswer: 'true\nfalse',
+    distractors: ['false\ntrue', 'true\ntrue', '5\n5'],
+    explanation: 'a == b is true (both are 5). a != b is false (they are equal). println on a boolean prints "true" or "false".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int a = 5;\n        int b = 5;\n        System.out.println(a == b);\n        System.out.println(a != b);\n    }\n}',
+        expectedOutput: 'true\nfalse\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-eq-003',
+    concept: 'equality-ops',
+    chapter: 3,
+    section: '3.3',
+    type: 'identify_error',
+    question: 'What is wrong with this code?\n\n```java\nint x = 0;\nif (x = 5) {\n    System.out.println("five");\n}\n```',
+    correctAnswer: 'Using = (assignment) instead of == (equality) inside the condition',
+    distractors: [
+      'x should be initialized to 5',
+      'Missing else clause',
+      'println should be print',
+    ],
+    explanation: 'if (x = 5) tries to assign 5 to x and use the result as a boolean, which is a type error in Java. The condition should be x == 5.',
+    formula: 'int x = 0;\nif (x = 5) {  // ERROR: assignment, not comparison\n    System.out.println("five");\n}',
+  },
+  {
+    id: 'ch3-eq-004',
+    concept: 'equality-ops',
+    chapter: 3,
+    section: '3.3',
+    type: 'true_false',
+    question: 'The != operator returns true when two values are NOT equal.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: '!= is the "not equal" operator. It evaluates to true when the operands have different values.',
+  },
+];
+
+// 3.3: Range comparisons
+const ch3RangeComparisons: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-range-001',
+    concept: 'range-comparisons',
+    chapter: 3,
+    section: '3.4',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint age = 17;\nif (age >= 16 && age < 18) {\n    System.out.println("teen driver");\n} else {\n    System.out.println("other");\n}\n```',
+    correctAnswer: 'teen driver',
+    distractors: ['other', 'true', '17'],
+    explanation: '17 >= 16 is true AND 17 < 18 is true, so the condition is true and "teen driver" prints.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int age = 17;\n        if (age >= 16 && age < 18) {\n            System.out.println("teen driver");\n        } else {\n            System.out.println("other");\n        }\n    }\n}',
+        expectedOutput: 'teen driver\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-range-002',
+    concept: 'range-comparisons',
+    chapter: 3,
+    section: '3.4',
+    type: 'identify_error',
+    question: 'A student wants to check if x is between 1 and 10 (inclusive). What is wrong?\n\n```java\nif (1 <= x <= 10) {\n    System.out.println("in range");\n}\n```',
+    correctAnswer: 'Java does not support chained comparisons; must use && to combine two conditions',
+    distractors: [
+      'Should use < instead of <=',
+      'Should use || instead of &&',
+      'The condition is correct Java syntax',
+    ],
+    explanation: 'Unlike Python, Java does not allow chained comparisons like 1 <= x <= 10. Use: if (x >= 1 && x <= 10).',
+    formula: 'if (1 <= x <= 10) { // INVALID Java\nif (x >= 1 && x <= 10) { // correct',
+  },
+  {
+    id: 'ch3-range-003',
+    concept: 'range-comparisons',
+    chapter: 3,
+    section: '3.4',
+    type: 'complete_code',
+    question: 'Complete the condition to check if temperature is between 68 and 77 (inclusive):\n\n```java\nint temp = 72;\nif (___ && ___) {\n    System.out.println("comfortable");\n}\n```',
+    correctAnswer: 'temp >= 68 && temp <= 77',
+    distractors: ['temp > 68 && temp < 77', 'temp >= 68 || temp <= 77', '68 <= temp <= 77'],
+    explanation: 'Use >= for the lower bound and <= for the upper bound, combined with &&.',
+  },
+  {
+    id: 'ch3-range-004',
+    concept: 'range-comparisons',
+    chapter: 3,
+    section: '3.4',
+    type: 'predict_output',
+    question: 'Trace the code and determine the output:\n\n```java\nint n = 15;\nString result;\nif (n < 10) {\n    result = "small";\n} else if (n < 20) {\n    result = "medium";\n} else {\n    result = "large";\n}\nSystem.out.println(result);\n```',
+    correctAnswer: 'medium',
+    distractors: ['small', 'large', 'null'],
+    explanation: 'n = 15. 15 < 10 is false. 15 < 20 is true → result = "medium".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int n = 15;\n        String result;\n        if (n < 10) result = "small";\n        else if (n < 20) result = "medium";\n        else result = "large";\n        System.out.println(result);\n    }\n}',
+        expectedOutput: 'medium\n',
+      },
+    },
+  },
+];
+
+// 3.4: Logical operators
+const ch3LogicalOps: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-log-001',
+    concept: 'logical-and-or-not',
+    chapter: 3,
+    section: '3.5',
+    type: 'vocabulary',
+    question: 'Which logical operator returns true only when BOTH operands are true?',
+    correctAnswer: '&&',
+    distractors: ['||', '!', '&'],
+    explanation: '&& (logical AND) returns true only when both left and right operands are true.',
+  },
+  {
+    id: 'ch3-log-002',
+    concept: 'logical-and-or-not',
+    chapter: 3,
+    section: '3.5',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nboolean p = true;\nboolean q = false;\nSystem.out.println(p && q);\nSystem.out.println(p || q);\nSystem.out.println(!p);\n```',
+    correctAnswer: 'false\ntrue\nfalse',
+    distractors: ['true\nfalse\ntrue', 'false\nfalse\ntrue', 'true\ntrue\nfalse'],
+    explanation: 'p && q = true && false = false. p || q = true || false = true. !p = !true = false.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        boolean p = true;\n        boolean q = false;\n        System.out.println(p && q);\n        System.out.println(p || q);\n        System.out.println(!p);\n    }\n}',
+        expectedOutput: 'false\ntrue\nfalse\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-log-003',
+    concept: 'logical-and-or-not',
+    chapter: 3,
+    section: '3.5',
+    type: 'true_false',
+    question: 'The expression `!false` evaluates to true.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'The ! (NOT) operator inverts a boolean. !false is true, !true is false.',
+  },
+  {
+    id: 'ch3-log-004',
+    concept: 'logical-and-or-not',
+    chapter: 3,
+    section: '3.5',
+    type: 'complete_code',
+    question: 'Fill in the condition to print "valid age" for ages 0 through 120 inclusive:\n\n```java\nint age = 25;\nif (___) {\n    System.out.println("valid age");\n}\n```',
+    correctAnswer: 'age >= 0 && age <= 120',
+    distractors: ['age >= 0 || age <= 120', 'age > 0 && age < 120', 'age != 0 && age != 120'],
+    explanation: 'Both conditions must hold at the same time (&&): the age must be at least 0 and at most 120.',
+  },
+];
+
+// 3.5: Short-circuit evaluation
+const ch3ShortCircuit: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-sc-001',
+    concept: 'short-circuit',
+    chapter: 3,
+    section: '3.6',
+    type: 'vocabulary',
+    question: 'What does "short-circuit evaluation" mean for the && operator?',
+    correctAnswer: 'If the left operand is false, the right operand is not evaluated',
+    distractors: [
+      'Both operands are always evaluated before the result is determined',
+      'If the left operand is true, the right operand is not evaluated',
+      'The operator evaluates right-to-left',
+    ],
+    explanation: 'With &&, if the left side is false the whole expression must be false — Java skips evaluating the right side. This is useful for null checks: if (obj != null && obj.size() > 0).',
+  },
+  {
+    id: 'ch3-sc-002',
+    concept: 'short-circuit',
+    chapter: 3,
+    section: '3.6',
+    type: 'true_false',
+    question: 'With the || operator, Java skips evaluating the right operand when the left operand is true.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'Short-circuit evaluation for ||: if the left side is true, the whole OR is true — the right side is never evaluated.',
+  },
+  {
+    id: 'ch3-sc-003',
+    concept: 'short-circuit',
+    chapter: 3,
+    section: '3.6',
+    type: 'code_analysis',
+    question: 'Given `int[] arr = null;`, which expression safely checks if the array has elements?',
+    correctAnswer: 'arr != null && arr.length > 0',
+    distractors: [
+      'arr.length > 0 && arr != null',
+      'arr != null || arr.length > 0',
+      'arr.length != 0',
+    ],
+    explanation: 'Short-circuit &&: if arr != null is false, arr.length > 0 is never evaluated, preventing a NullPointerException. Reversing the order would crash if arr is null.',
+  },
+];
+
+// 3.6: Switch statement
+const ch3Switch: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-sw-001',
+    concept: 'switch-statement',
+    chapter: 3,
+    section: '3.7',
+    type: 'vocabulary',
+    question: 'In a switch statement, what keyword matches if no case label equals the expression?',
+    correctAnswer: 'default',
+    distractors: ['else', 'otherwise', 'none'],
+    explanation: 'The default clause in a switch is like the final else in an if-else chain — it runs when no case matches.',
+  },
+  {
+    id: 'ch3-sw-002',
+    concept: 'switch-statement',
+    chapter: 3,
+    section: '3.7',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint day = 3;\nswitch (day) {\n    case 1: System.out.println("Mon"); break;\n    case 2: System.out.println("Tue"); break;\n    case 3: System.out.println("Wed"); break;\n    default: System.out.println("Other");\n}\n```',
+    correctAnswer: 'Wed',
+    distractors: ['Mon', 'Tue', 'Other'],
+    explanation: 'day == 3 matches case 3, which prints "Wed" then break exits the switch.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int day = 3;\n        switch (day) {\n            case 1: System.out.println("Mon"); break;\n            case 2: System.out.println("Tue"); break;\n            case 3: System.out.println("Wed"); break;\n            default: System.out.println("Other");\n        }\n    }\n}',
+        expectedOutput: 'Wed\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-sw-003',
+    concept: 'switch-statement',
+    chapter: 3,
+    section: '3.7',
+    type: 'predict_output',
+    question: 'What does this code print? (Note: no break in case 1)\n\n```java\nint x = 1;\nswitch (x) {\n    case 1:\n    case 2:\n        System.out.println("one or two");\n        break;\n    case 3:\n        System.out.println("three");\n        break;\n}\n```',
+    correctAnswer: 'one or two',
+    distractors: ['one', 'two', 'one\none or two'],
+    explanation: 'Case 1 has no code and no break, so it "falls through" into case 2. Case 2 prints "one or two" then break exits.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int x = 1;\n        switch (x) {\n            case 1:\n            case 2: System.out.println("one or two"); break;\n            case 3: System.out.println("three"); break;\n        }\n    }\n}',
+        expectedOutput: 'one or two\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-sw-004',
+    concept: 'switch-statement',
+    chapter: 3,
+    section: '3.7',
+    type: 'true_false',
+    question: 'Omitting a break at the end of a switch case causes execution to "fall through" into the next case.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'Without break, execution continues into the next case statement. This can be intentional (grouping cases) or a bug.',
+  },
+  {
+    id: 'ch3-sw-005',
+    concept: 'switch-statement',
+    chapter: 3,
+    section: '3.7',
+    type: 'complete_code',
+    question: 'Complete the switch to print the season for months 12, 1, 2:\n\n```java\nint month = 1;\nswitch (month) {\n    case 12:\n    case 1:\n    ___:\n        System.out.println("Winter");\n        break;\n    default:\n        System.out.println("Other");\n}\n```',
+    correctAnswer: 'case 2',
+    distractors: ['default 2', 'case: 2', '2:'],
+    explanation: 'case labels use the keyword "case" followed by the value and a colon: case 2:',
+  },
+];
+
+// 3.7: Ternary operator
+const ch3Ternary: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-tern-001',
+    concept: 'ternary',
+    chapter: 3,
+    section: '3.8',
+    type: 'vocabulary',
+    question: 'What is the general syntax of the ternary conditional operator?',
+    correctAnswer: 'condition ? valueIfTrue : valueIfFalse',
+    distractors: [
+      'condition : valueIfTrue ? valueIfFalse',
+      'if (condition) valueIfTrue else valueIfFalse',
+      'condition ? valueIfFalse : valueIfTrue',
+    ],
+    explanation: 'The ternary operator has three parts: a boolean condition, a value to return if true (after ?), and a value to return if false (after :).',
+  },
+  {
+    id: 'ch3-tern-002',
+    concept: 'ternary',
+    chapter: 3,
+    section: '3.8',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint x = 10;\nString result = (x % 2 == 0) ? "even" : "odd";\nSystem.out.println(result);\n```',
+    correctAnswer: 'even',
+    distractors: ['odd', 'true', '0'],
+    explanation: '10 % 2 == 0 is true, so the expression evaluates to "even".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int x = 10;\n        String result = (x % 2 == 0) ? "even" : "odd";\n        System.out.println(result);\n    }\n}',
+        expectedOutput: 'even\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-tern-003',
+    concept: 'ternary',
+    chapter: 3,
+    section: '3.8',
+    type: 'complete_code',
+    question: 'Rewrite this if-else as a single ternary expression:\n\n```java\nint a = 8, b = 3;\nint max;\nif (a > b) {\n    max = a;\n} else {\n    max = b;\n}\n// Rewrite as:\nint max2 = ___;\n```',
+    correctAnswer: '(a > b) ? a : b',
+    distractors: ['(a > b) ? b : a', 'a > b ? a, b', '(a > b) : a ? b'],
+    explanation: 'The ternary evaluates the condition (a > b); if true it returns a, otherwise b.',
+  },
+];
+
+// 3.8: Floating-point equality
+const ch3FloatEq: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-feq-001',
+    concept: 'floating-point-eq',
+    chapter: 3,
+    section: '3.9',
+    type: 'true_false',
+    question: 'Using == to compare two double values is always reliable in Java.',
+    correctAnswer: 'False',
+    distractors: ['True'],
+    explanation: 'Floating-point arithmetic can introduce tiny rounding errors. Two values that should be equal may differ by a tiny fraction, causing == to return false unexpectedly.',
+  },
+  {
+    id: 'ch3-feq-002',
+    concept: 'floating-point-eq',
+    chapter: 3,
+    section: '3.9',
+    type: 'code_analysis',
+    question: 'Which expression correctly checks if two doubles a and b are "close enough" to be considered equal?',
+    correctAnswer: 'Math.abs(a - b) < 1e-9',
+    distractors: ['a == b', 'a - b == 0', 'Math.round(a) == Math.round(b)'],
+    explanation: 'The standard idiom is to check if the absolute difference is smaller than a small epsilon (like 1e-9). This tolerates floating-point rounding errors.',
+  },
+];
+
+// 3.9: Nested branches
+const ch3NestedBranches: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-nest-001',
+    concept: 'nested-branches',
+    chapter: 3,
+    section: '3.10',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint x = 5;\nif (x > 0) {\n    if (x > 10) {\n        System.out.println("big");\n    } else {\n        System.out.println("medium");\n    }\n} else {\n    System.out.println("negative");\n}\n```',
+    correctAnswer: 'medium',
+    distractors: ['big', 'negative', 'big\nmedium'],
+    explanation: 'x = 5. x > 0 is true → enter outer if. x > 10 is false → print "medium".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int x = 5;\n        if (x > 0) {\n            if (x > 10) { System.out.println("big"); }\n            else { System.out.println("medium"); }\n        } else {\n            System.out.println("negative");\n        }\n    }\n}',
+        expectedOutput: 'medium\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-nest-002',
+    concept: 'nested-branches',
+    chapter: 3,
+    section: '3.10',
+    type: 'true_false',
+    question: 'In Java, the "dangling else" rule pairs an else clause with the nearest preceding unmatched if.',
+    correctAnswer: 'True',
+    distractors: ['False'],
+    explanation: 'Java\'s dangling-else resolution: else always matches the innermost if that does not already have an else. Use braces {} to override this behavior.',
+  },
+  {
+    id: 'ch3-nest-003',
+    concept: 'nested-branches',
+    chapter: 3,
+    section: '3.10',
+    type: 'predict_output',
+    question: 'Trace the code and determine what it prints:\n\n```java\nint age = 15;\nboolean hasLicense = false;\nString category;\nif (age >= 16) {\n    if (hasLicense) {\n        category = "licensed driver";\n    } else {\n        category = "unlicensed";\n    }\n} else {\n    category = "too young";\n}\nSystem.out.println(category);\n```',
+    correctAnswer: 'too young',
+    distractors: ['licensed driver', 'unlicensed', 'null'],
+    explanation: 'age = 15. age >= 16 is false → outer else → category = "too young".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int age = 15;\n        boolean hasLicense = false;\n        String category;\n        if (age >= 16) {\n            if (hasLicense) { category = "licensed driver"; } else { category = "unlicensed"; }\n        } else {\n            category = "too young";\n        }\n        System.out.println(category);\n    }\n}',
+        expectedOutput: 'too young\n',
+      },
+    },
+  },
+];
+
+// 3.10: String equality & access
+const ch3StringEq: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-str-001',
+    concept: 'string-equals',
+    chapter: 3,
+    section: '3.11',
+    type: 'vocabulary',
+    question: 'Which method should you use to compare two String values for equal content in Java?',
+    correctAnswer: '.equals()',
+    distractors: ['==', '.compareTo()', '.match()'],
+    explanation: '== compares object references (memory addresses), not content. Use s1.equals(s2) to compare the actual characters in the strings.',
+  },
+  {
+    id: 'ch3-str-002',
+    concept: 'string-equals',
+    chapter: 3,
+    section: '3.11',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nString a = "hello";\nString b = "hello";\nSystem.out.println(a.equals(b));\nSystem.out.println(a.equalsIgnoreCase("HELLO"));\n```',
+    correctAnswer: 'true\ntrue',
+    distractors: ['false\nfalse', 'true\nfalse', 'false\ntrue'],
+    explanation: '.equals() returns true because the character sequences are identical. .equalsIgnoreCase() ignores case differences.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        String a = "hello";\n        String b = "hello";\n        System.out.println(a.equals(b));\n        System.out.println(a.equalsIgnoreCase("HELLO"));\n    }\n}',
+        expectedOutput: 'true\ntrue\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-str-003',
+    concept: 'string-access',
+    chapter: 3,
+    section: '3.12',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nString s = "Java";\nSystem.out.println(s.length());\nSystem.out.println(s.charAt(1));\n```',
+    correctAnswer: '4\na',
+    distractors: ['4\nJ', '3\na', '4\nv'],
+    explanation: '"Java" has 4 characters. Index 1 (0-based) is \'a\'. J is at index 0, a at 1, v at 2, a at 3.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        String s = "Java";\n        System.out.println(s.length());\n        System.out.println(s.charAt(1));\n    }\n}',
+        expectedOutput: '4\na\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-str-004',
+    concept: 'string-access',
+    chapter: 3,
+    section: '3.12',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nString word = "hello";\nSystem.out.println(word.indexOf("l"));\nSystem.out.println(word.substring(1, 4));\n```',
+    correctAnswer: '2\nell',
+    distractors: ['3\nell', '2\nhell', '1\nell'],
+    explanation: 'indexOf("l") returns the index of the first "l", which is 2. substring(1, 4) extracts characters from index 1 up to (not including) 4: e, l, l → "ell".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        String word = "hello";\n        System.out.println(word.indexOf("l"));\n        System.out.println(word.substring(1, 4));\n    }\n}',
+        expectedOutput: '2\nell\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-str-005',
+    concept: 'string-ops',
+    chapter: 3,
+    section: '3.13',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nString s = "  Hello World  ";\nSystem.out.println(s.trim().toLowerCase());\n```',
+    correctAnswer: 'hello world',
+    distractors: ['  hello world  ', 'Hello World', 'hello world  '],
+    explanation: '.trim() removes leading and trailing whitespace. .toLowerCase() converts all characters to lowercase. Applied in sequence: "  Hello World  " → "Hello World" → "hello world".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        String s = "  Hello World  ";\n        System.out.println(s.trim().toLowerCase());\n    }\n}',
+        expectedOutput: 'hello world\n',
+      },
+    },
+  },
+  {
+    id: 'ch3-str-006',
+    concept: 'character-methods',
+    chapter: 3,
+    section: '3.14',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nchar c = \'A\';\nSystem.out.println(Character.isLetter(c));\nSystem.out.println(Character.isUpperCase(c));\nSystem.out.println(Character.toLowerCase(c));\n```',
+    correctAnswer: 'true\ntrue\na',
+    distractors: ['true\nfalse\nA', 'false\ntrue\na', 'true\ntrue\nA'],
+    explanation: '\'A\' is a letter (isLetter → true), it is uppercase (isUpperCase → true), and toLowerCase converts it to \'a\'.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        char c = \'A\';\n        System.out.println(Character.isLetter(c));\n        System.out.println(Character.isUpperCase(c));\n        System.out.println(Character.toLowerCase(c));\n    }\n}',
+        expectedOutput: 'true\ntrue\na\n',
+      },
+    },
+  },
+];
+
+// ============================================
+// CHAPTER 4: LOOPS
+// ============================================
+
+// 4.1: While loop
+const ch4WhileLoop: CSUnifiedQuestion[] = [
+  {
+    id: 'ch4-while-001',
+    concept: 'while-loop',
+    chapter: 4,
+    section: '4.1',
+    type: 'vocabulary',
+    question: 'What are the three essential components that prevent a while loop from running forever?',
+    correctAnswer: 'Initialization before the loop, a condition that eventually becomes false, and an update step inside the loop',
+    distractors: [
+      'A break statement, a continue statement, and a return statement',
+      'Opening brace, closing brace, and semicolon',
+      'A counter, a limit, and a println statement',
+    ],
+    explanation: 'Every loop needs: (1) a variable initialized before the loop, (2) a condition tested each iteration that will eventually be false, and (3) code inside the loop that changes the variable so the condition eventually fails.',
+  },
+  {
+    id: 'ch4-while-002',
+    concept: 'while-loop',
+    chapter: 4,
+    section: '4.1',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint i = 1;\nint product = 1;\nwhile (i <= 4) {\n    product *= i;\n    i++;\n}\nSystem.out.println(product);\n```',
+    correctAnswer: '24',
+    distractors: ['10', '4', '120'],
+    explanation: 'i goes 1,2,3,4. product = 1*1*2*3*4 = 24 (4 factorial).',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int i = 1;\n        int product = 1;\n        while (i <= 4) { product *= i; i++; }\n        System.out.println(product);\n    }\n}',
+        expectedOutput: '24\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-while-003',
+    concept: 'while-loop',
+    chapter: 4,
+    section: '4.1',
+    type: 'trace_variables',
+    question: 'Trace the loop. What are the final values of count and sum?\n\n```java\nint count = 0;\nint sum = 0;\nint n = 5;\nwhile (n > 0) {\n    sum += n;\n    n -= 2;\n    count++;\n}\n```',
+    correctAnswer: 'count = 3, sum = 9',
+    formula: 'int count = 0;\nint sum = 0;\nint n = 5;\nwhile (n > 0) {\n    sum += n;\n    n -= 2;\n    count++;\n}',
+    distractors: ['count = 5, sum = 15', 'count = 2, sum = 8', 'count = 3, sum = 6'],
+    explanation: 'Iterations: n=5→sum=5,n=3,count=1; n=3→sum=8,n=1,count=2; n=1→sum=9,n=-1,count=3; n=-1<0 stops. Final: count=3, sum=9.',
+    interactive: {
+      variantData: {
+        code: 'int count = 0;\nint sum = 0;\nint n = 5;\nwhile (n > 0) { sum += n; n -= 2; count++; }',
+        finalValues: { count: 3, sum: 9 },
+        steps: ['n=5: sum=5, n=3, count=1', 'n=3: sum=8, n=1, count=2', 'n=1: sum=9, n=-1, count=3', 'n=-1: loop ends'],
+      },
+    },
+  },
+  {
+    id: 'ch4-while-004',
+    concept: 'while-loop',
+    chapter: 4,
+    section: '4.1',
+    type: 'identify_error',
+    question: 'Why does this code loop forever?\n\n```java\nint i = 1;\nwhile (i <= 10) {\n    System.out.println(i);\n}\n```',
+    correctAnswer: 'The variable i is never incremented, so the condition i <= 10 is always true',
+    distractors: [
+      'The condition should use < instead of <=',
+      'println should be print',
+      'i should start at 0',
+    ],
+    explanation: 'Without i++ (or i = i + 1) inside the loop body, i stays at 1 forever and 1 <= 10 is always true → infinite loop.',
+    formula: 'int i = 1;\nwhile (i <= 10) {\n    System.out.println(i);\n    // Missing: i++;\n}',
+  },
+];
+
+// 4.2: For loop
+const ch4ForLoop: CSUnifiedQuestion[] = [
+  {
+    id: 'ch4-for-001',
+    concept: 'for-loop',
+    chapter: 4,
+    section: '4.2',
+    type: 'vocabulary',
+    question: 'In a for-loop header `for (init; condition; update)`, which part runs exactly once before the loop starts?',
+    correctAnswer: 'init',
+    distractors: ['condition', 'update', 'All three run before the loop'],
+    explanation: 'The init expression runs once at the start. The condition is tested before each iteration. The update runs after each iteration body.',
+  },
+  {
+    id: 'ch4-for-002',
+    concept: 'for-loop',
+    chapter: 4,
+    section: '4.2',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nfor (int i = 0; i < 5; i++) {\n    System.out.print(i + " ");\n}\n```',
+    correctAnswer: '0 1 2 3 4',
+    distractors: ['1 2 3 4 5', '0 1 2 3 4 5', '0 1 2 3'],
+    explanation: 'i goes from 0 to 4 (stopping before 5). Each iteration prints i followed by a space.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        for (int i = 0; i < 5; i++) { System.out.print(i + " "); }\n    }\n}',
+        expectedOutput: '0 1 2 3 4 \n',
+      },
+    },
+  },
+  {
+    id: 'ch4-for-003',
+    concept: 'for-loop',
+    chapter: 4,
+    section: '4.2',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint sum = 0;\nfor (int i = 1; i <= 5; i++) {\n    sum += i;\n}\nSystem.out.println(sum);\n```',
+    correctAnswer: '15',
+    distractors: ['10', '20', '14'],
+    explanation: 'sum = 1+2+3+4+5 = 15.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int sum = 0;\n        for (int i = 1; i <= 5; i++) sum += i;\n        System.out.println(sum);\n    }\n}',
+        expectedOutput: '15\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-for-004',
+    concept: 'for-loop',
+    chapter: 4,
+    section: '4.2',
+    type: 'complete_code',
+    question: 'Complete the for-loop to print even numbers from 2 to 10:\n\n```java\nfor (int i = ___; i <= 10; i += ___) {\n    System.out.println(i);\n}\n```',
+    correctAnswer: '2 and 2',
+    distractors: ['0 and 2', '2 and 1', '1 and 2'],
+    explanation: 'Start at i = 2 (first even number) and increment by 2 each time to skip odd numbers.',
+  },
+  {
+    id: 'ch4-for-005',
+    concept: 'variable-scope',
+    chapter: 4,
+    section: '4.3',
+    type: 'identify_error',
+    question: 'What is wrong with this code?\n\n```java\nfor (int i = 0; i < 5; i++) {\n    System.out.println(i);\n}\nSystem.out.println("Final i: " + i);\n```',
+    correctAnswer: 'i is declared inside the for-loop header and is not accessible outside the loop',
+    distractors: [
+      'The loop condition should use <=',
+      'You cannot use i inside println',
+      'The loop is missing a break statement',
+    ],
+    explanation: 'Variables declared in the for-loop init clause (int i = 0) have block scope — they only exist inside the loop. Accessing i after the loop closing brace is a compile error.',
+    formula: 'for (int i = 0; i < 5; i++) { /* i in scope */ }\nSystem.out.println(i); // ERROR: i out of scope',
+  },
+];
+
+// 4.3: Break and continue
+const ch4BreakContinue: CSUnifiedQuestion[] = [
+  {
+    id: 'ch4-brk-001',
+    concept: 'break-continue',
+    chapter: 4,
+    section: '4.4',
+    type: 'vocabulary',
+    question: 'What does the break statement do when executed inside a loop?',
+    correctAnswer: 'Immediately exits the loop, skipping all remaining iterations',
+    distractors: [
+      'Skips the rest of the current iteration and moves to the next',
+      'Exits the entire program',
+      'Restarts the loop from the beginning',
+    ],
+    explanation: 'break terminates the innermost enclosing loop (or switch). Execution continues with the statement after the loop.',
+  },
+  {
+    id: 'ch4-brk-002',
+    concept: 'break-continue',
+    chapter: 4,
+    section: '4.4',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nfor (int i = 0; i < 10; i++) {\n    if (i == 4) break;\n    System.out.print(i + " ");\n}\n```',
+    correctAnswer: '0 1 2 3',
+    distractors: ['0 1 2 3 4', '0 1 2 3 4 5 6 7 8 9', '1 2 3'],
+    explanation: 'When i reaches 4, break exits the loop immediately. Only 0, 1, 2, 3 are printed.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        for (int i = 0; i < 10; i++) {\n            if (i == 4) break;\n            System.out.print(i + " ");\n        }\n    }\n}',
+        expectedOutput: '0 1 2 3 \n',
+      },
+    },
+  },
+  {
+    id: 'ch4-brk-003',
+    concept: 'break-continue',
+    chapter: 4,
+    section: '4.4',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nfor (int i = 0; i < 6; i++) {\n    if (i % 2 == 0) continue;\n    System.out.print(i + " ");\n}\n```',
+    correctAnswer: '1 3 5',
+    distractors: ['0 2 4', '1 2 3 4 5', '0 1 2 3 4 5'],
+    explanation: 'continue skips the rest of the body when i is even. Only odd numbers (1, 3, 5) reach the print statement.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        for (int i = 0; i < 6; i++) {\n            if (i % 2 == 0) continue;\n            System.out.print(i + " ");\n        }\n    }\n}',
+        expectedOutput: '1 3 5 \n',
+      },
+    },
+  },
+  {
+    id: 'ch4-brk-004',
+    concept: 'break-continue',
+    chapter: 4,
+    section: '4.4',
+    type: 'vocabulary',
+    question: 'What does the continue statement do when executed inside a loop?',
+    correctAnswer: 'Skips the rest of the current iteration and jumps to the update expression',
+    distractors: [
+      'Exits the loop entirely',
+      'Restarts the loop from i = 0',
+      'Exits the current method',
+    ],
+    explanation: 'continue jumps to the loop\'s update step (i++ in a for-loop, or re-evaluates the while condition), skipping any remaining code in the current iteration.',
+  },
+];
+
+// 4.4: Nested loops
+const ch4NestedLoops: CSUnifiedQuestion[] = [
+  {
+    id: 'ch4-nest-001',
+    concept: 'nested-loops',
+    chapter: 4,
+    section: '4.5',
+    type: 'predict_output',
+    question: 'How many asterisks does this code print?\n\n```java\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 4; j++) {\n        System.out.print("*");\n    }\n    System.out.println();\n}\n```',
+    correctAnswer: '12',
+    distractors: ['7', '3', '4'],
+    explanation: 'The outer loop runs 3 times. Each time, the inner loop runs 4 times printing a "*". Total: 3 × 4 = 12 asterisks.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int count = 0;\n        for (int i = 0; i < 3; i++) {\n            for (int j = 0; j < 4; j++) count++;\n        }\n        System.out.println(count);\n    }\n}',
+        expectedOutput: '12\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-nest-002',
+    concept: 'nested-loops',
+    chapter: 4,
+    section: '4.5',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nfor (int i = 1; i <= 3; i++) {\n    for (int j = 1; j <= 3; j++) {\n        System.out.print(i * j + " ");\n    }\n    System.out.println();\n}\n```',
+    correctAnswer: '1 2 3 \n2 4 6 \n3 6 9',
+    distractors: ['1 2 3 4 5 6 7 8 9', '1 4 9 \n2 5 8 \n3 6 7', '3 6 9 \n2 4 6 \n1 2 3'],
+    explanation: 'This prints the 3×3 multiplication table. Row i prints i*1, i*2, i*3.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        for (int i = 1; i <= 3; i++) {\n            for (int j = 1; j <= 3; j++) System.out.print(i * j + " ");\n            System.out.println();\n        }\n    }\n}',
+        expectedOutput: '1 2 3 \n2 4 6 \n3 6 9 \n',
+      },
+    },
+  },
+  {
+    id: 'ch4-nest-003',
+    concept: 'nested-loops',
+    chapter: 4,
+    section: '4.5',
+    type: 'predict_output',
+    question: 'How many times does `count++` execute?\n\n```java\nint count = 0;\nfor (int i = 0; i < 4; i++) {\n    for (int j = i; j < 4; j++) {\n        count++;\n    }\n}\nSystem.out.println(count);\n```',
+    correctAnswer: '10',
+    distractors: ['16', '6', '8'],
+    explanation: 'Inner loop runs: i=0→4 times, i=1→3 times, i=2→2 times, i=3→1 time. Total: 4+3+2+1 = 10.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int count = 0;\n        for (int i = 0; i < 4; i++) {\n            for (int j = i; j < 4; j++) count++;\n        }\n        System.out.println(count);\n    }\n}',
+        expectedOutput: '10\n',
+      },
+    },
+  },
+];
+
+// 4.5: Loop patterns
+const ch4LoopPatterns: CSUnifiedQuestion[] = [
+  {
+    id: 'ch4-pat-001',
+    concept: 'loop-patterns',
+    chapter: 4,
+    section: '4.6',
+    type: 'vocabulary',
+    question: 'What is an "accumulator" variable in the context of loops?',
+    correctAnswer: 'A variable initialized before the loop that collects a running total or combined result',
+    distractors: [
+      'A variable that counts how many times the loop has run',
+      'The loop variable declared in the for-loop header',
+      'A variable that stores the loop condition',
+    ],
+    explanation: 'An accumulator pattern: initialize to 0 (for sum) or 1 (for product) before the loop, then update it each iteration: sum += value or product *= value.',
+  },
+  {
+    id: 'ch4-pat-002',
+    concept: 'loop-patterns',
+    chapter: 4,
+    section: '4.6',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint max = 0;\nint[] vals = {3, 7, 2, 9, 4};\nfor (int i = 0; i < vals.length; i++) {\n    if (vals[i] > max) max = vals[i];\n}\nSystem.out.println(max);\n```',
+    correctAnswer: '9',
+    distractors: ['3', '7', '4'],
+    explanation: 'The loop tracks the running maximum. After scanning {3,7,2,9,4}, the maximum is 9.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int max = 0;\n        int[] vals = {3, 7, 2, 9, 4};\n        for (int i = 0; i < vals.length; i++) {\n            if (vals[i] > max) max = vals[i];\n        }\n        System.out.println(max);\n    }\n}',
+        expectedOutput: '9\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-pat-003',
+    concept: 'loop-patterns',
+    chapter: 4,
+    section: '4.6',
+    type: 'complete_code',
+    question: 'Complete the counter loop that counts how many numbers from 1 to 20 are divisible by 3:\n\n```java\nint count = 0;\nfor (int i = 1; i <= 20; i++) {\n    if (___) {\n        count++;\n    }\n}\nSystem.out.println(count);\n```',
+    correctAnswer: 'i % 3 == 0',
+    distractors: ['i / 3 == 0', 'i % 3 != 0', 'i == 3'],
+    explanation: 'A number is divisible by 3 when i % 3 == 0 (remainder is zero).',
+  },
+];
+
+// 4.6: Loops with strings
+const ch4LoopsStrings: CSUnifiedQuestion[] = [
+  {
+    id: 'ch4-ls-001',
+    concept: 'loops-strings',
+    chapter: 4,
+    section: '4.7',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nString s = "hello";\nint vowels = 0;\nfor (int i = 0; i < s.length(); i++) {\n    char c = s.charAt(i);\n    if (c == \'a\' || c == \'e\' || c == \'i\' || c == \'o\' || c == \'u\') {\n        vowels++;\n    }\n}\nSystem.out.println(vowels);\n```',
+    correctAnswer: '2',
+    distractors: ['5', '3', '1'],
+    explanation: '"hello" contains \'e\' and \'o\' — 2 vowels.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        String s = "hello";\n        int vowels = 0;\n        for (int i = 0; i < s.length(); i++) {\n            char c = s.charAt(i);\n            if (c == \'a\' || c == \'e\' || c == \'i\' || c == \'o\' || c == \'u\') vowels++;\n        }\n        System.out.println(vowels);\n    }\n}',
+        expectedOutput: '2\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-ls-002',
+    concept: 'loops-strings',
+    chapter: 4,
+    section: '4.7',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nString s = "Java";\nString rev = "";\nfor (int i = s.length() - 1; i >= 0; i--) {\n    rev += s.charAt(i);\n}\nSystem.out.println(rev);\n```',
+    correctAnswer: 'avaJ',
+    distractors: ['Java', 'avaj', 'Jav'],
+    explanation: 'The loop starts at the last index (3) and iterates down to 0, appending each character. J(3)→a(2)→v(1)→a(0) appended in reverse order → "avaJ".',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        String s = "Java";\n        String rev = "";\n        for (int i = s.length() - 1; i >= 0; i--) rev += s.charAt(i);\n        System.out.println(rev);\n    }\n}',
+        expectedOutput: 'avaJ\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-ls-003',
+    concept: 'loops-strings',
+    chapter: 4,
+    section: '4.7',
+    type: 'complete_code',
+    question: 'Complete the loop to count uppercase letters in a string:\n\n```java\nString s = "HeLLo WoRLd";\nint upper = 0;\nfor (int i = 0; i < s.length(); i++) {\n    if (___) {\n        upper++;\n    }\n}\nSystem.out.println(upper);\n```',
+    correctAnswer: 'Character.isUpperCase(s.charAt(i))',
+    distractors: [
+      's.charAt(i).isUpperCase()',
+      'Character.toUpperCase(s.charAt(i))',
+      's.charAt(i) >= \'A\'',
+    ],
+    explanation: 'Character.isUpperCase(char) returns true when the character is an uppercase letter. Always use the Character class for char classification.',
+  },
+];
+
+// 4.7: Domain validation & running totals
+const ch4Practice: CSUnifiedQuestion[] = [
+  {
+    id: 'ch4-prac-001',
+    concept: 'domain-validation',
+    chapter: 4,
+    section: '4.8',
+    type: 'code_analysis',
+    question: 'A program needs to read a month number (1–12). Which loop structure is best for re-prompting until valid input is entered?',
+    correctAnswer: 'while (month < 1 || month > 12) — loop until valid',
+    distractors: [
+      'for (int i = 0; i < 12; i++) — count 12 attempts',
+      'if (month < 1 || month > 12) — check once',
+      'do while (month != 0) — loop until 0',
+    ],
+    explanation: 'An input-validation loop keeps asking as long as the input is invalid. The while condition expresses "still invalid": while (month < 1 || month > 12).',
+  },
+  {
+    id: 'ch4-prac-002',
+    concept: 'salary-loops',
+    chapter: 4,
+    section: '4.9',
+    type: 'predict_output',
+    question: 'What does this code print?\n\n```java\nint total = 0;\nfor (int i = 1; i <= 4; i++) {\n    total += i * 100;\n}\nSystem.out.println(total);\n```',
+    correctAnswer: '1000',
+    distractors: ['400', '100', '2400'],
+    explanation: 'total = 100 + 200 + 300 + 400 = 1000.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int total = 0;\n        for (int i = 1; i <= 4; i++) total += i * 100;\n        System.out.println(total);\n    }\n}',
+        expectedOutput: '1000\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-prac-003',
+    concept: 'gcd-euclid',
+    chapter: 4,
+    section: '4.10',
+    type: 'predict_output',
+    question: 'Trace Euclid\'s algorithm. What does the program print?\n\n```java\nint a = 12, b = 8;\nwhile (b != 0) {\n    int r = a % b;\n    a = b;\n    b = r;\n}\nSystem.out.println(a);\n```',
+    correctAnswer: '4',
+    distractors: ['8', '12', '2'],
+    explanation: 'Iteration 1: r=12%8=4, a=8, b=4. Iteration 2: r=8%4=0, a=4, b=0. Loop ends (b==0). GCD(12,8) = 4.',
+    interactive: {
+      outputData: {
+        code: 'public class Test {\n    public static void main(String[] args) {\n        int a = 12, b = 8;\n        while (b != 0) { int r = a % b; a = b; b = r; }\n        System.out.println(a);\n    }\n}',
+        expectedOutput: '4\n',
+      },
+    },
+  },
+  {
+    id: 'ch4-prac-004',
+    concept: 'gcd-euclid',
+    chapter: 4,
+    section: '4.10',
+    type: 'vocabulary',
+    question: 'Euclid\'s GCD algorithm terminates because:',
+    correctAnswer: 'Each iteration, b becomes a smaller non-negative integer, so b must eventually reach 0',
+    distractors: [
+      'There is a break statement that exits when a equals b',
+      'Java automatically limits loops to 1000 iterations',
+      'The condition b != 0 guarantees at least one iteration',
+    ],
+    explanation: 'The new b is a % b_old, which is strictly less than b_old (remainder is always < divisor). Since b decreases each iteration and can\'t go below 0, it must eventually reach 0.',
+  },
+  {
+    id: 'ch4-prac-005',
+    concept: 'unit-testing-branches',
+    chapter: 4,
+    section: '4.11',
+    type: 'vocabulary',
+    question: 'What are "boundary values" when testing a range check like `x >= 1 && x <= 10`?',
+    correctAnswer: 'The values just inside (1, 10) and just outside (0, 11) the valid range',
+    distractors: [
+      'Any random values in the middle of the range',
+      'Only the values 1 and 10',
+      'Negative numbers and zero',
+    ],
+    explanation: 'Boundary testing checks the edges: 0 (just below), 1 (minimum valid), 10 (maximum valid), 11 (just above). These are most likely to expose off-by-one errors.',
+  },
+  {
+    id: 'ch4-prac-006',
+    concept: 'javadoc',
+    chapter: 4,
+    section: '4.12',
+    type: 'vocabulary',
+    question: 'Which Javadoc tag documents a method\'s return value?',
+    correctAnswer: '@return',
+    distractors: ['@result', '@output', '@value'],
+    explanation: 'Standard Javadoc tags: @param describes a parameter, @return describes the return value, @throws describes exceptions.',
+  },
+  {
+    id: 'ch4-prac-007',
+    concept: 'javadoc',
+    chapter: 4,
+    section: '4.12',
+    type: 'complete_code',
+    question: 'Add the correct opening delimiter for a Javadoc comment:\n\n```java\n___\n * Computes the square of a number.\n * @param n the number to square\n * @return n squared\n */\n```',
+    correctAnswer: '/**',
+    distractors: ['/*', '//', '<!--'],
+    explanation: 'Javadoc comments start with /** (two asterisks) and end with */. Regular block comments start with /* (one asterisk).',
+  },
+  {
+    id: 'ch4-prac-008',
+    concept: 'incremental-dev',
+    chapter: 4,
+    section: '4.13',
+    type: 'vocabulary',
+    question: 'What is incremental development?',
+    correctAnswer: 'Building a program in small verifiable steps, testing each step before adding more',
+    distractors: [
+      'Writing all the code first, then testing it all at once',
+      'Using a debugger to step through each line',
+      'Refactoring code to remove redundancy',
+    ],
+    explanation: 'Incremental development: write a tiny piece, verify it works (often with a print statement), then extend. This limits how much is broken at any one time.',
+  },
+];
+
+// Write-program challenges for Ch3-4
+const ch34WriteProgramChallenges: CSUnifiedQuestion[] = [
+  {
+    id: 'ch3-wp-001',
+    concept: 'if-else',
+    chapter: 3,
+    section: '3.2',
+    type: 'write_program',
+    question: 'Write a Java program that reads an integer from a variable (use 42 as the value) and prints "positive", "negative", or "zero" based on its sign.',
+    correctAnswer: 'A program that uses if-else to check if the value is > 0, < 0, or == 0',
+    interactive: {
+      programData: {
+        filename: 'SignCheck.java',
+        description: 'Print the sign of the integer 42: "positive", "negative", or "zero".',
+        expectedOutput: 'positive',
+        sampleSolution: 'public class SignCheck {\n    public static void main(String[] args) {\n        int n = 42;\n        if (n > 0) {\n            System.out.println("positive");\n        } else if (n < 0) {\n            System.out.println("negative");\n        } else {\n            System.out.println("zero");\n        }\n    }\n}',
+        requiredElements: ['if', 'else', 'System.out.println'],
+      },
+    },
+  },
+  {
+    id: 'ch4-wp-001',
+    concept: 'for-loop',
+    chapter: 4,
+    section: '4.2',
+    type: 'write_program',
+    question: 'Write a Java program that prints the sum of all integers from 1 to 10 using a for loop.',
+    correctAnswer: '55',
+    interactive: {
+      programData: {
+        filename: 'SumLoop.java',
+        description: 'Use a for loop to compute and print the sum 1+2+3+...+10.',
+        expectedOutput: '55',
+        sampleSolution: 'public class SumLoop {\n    public static void main(String[] args) {\n        int sum = 0;\n        for (int i = 1; i <= 10; i++) {\n            sum += i;\n        }\n        System.out.println(sum);\n    }\n}',
+        requiredElements: ['for', 'sum', 'System.out.println'],
+      },
+    },
+  },
+];
+
 export const unifiedQuestionPool: CSUnifiedQuestion[] = [
   ...ch1ComputerComponents,
   ...ch1LanguageHistory,
@@ -1996,6 +3121,26 @@ export const unifiedQuestionPool: CSUnifiedQuestion[] = [
   ...ch2Overflow,
   ...ch2RandomNumbers,
   ...writeProgramChallenges,
+  // Chapter 3: Branches
+  ...ch3BooleanIfElse,
+  ...ch3EqualityOps,
+  ...ch3RangeComparisons,
+  ...ch3LogicalOps,
+  ...ch3ShortCircuit,
+  ...ch3Switch,
+  ...ch3Ternary,
+  ...ch3FloatEq,
+  ...ch3NestedBranches,
+  ...ch3StringEq,
+  // Chapter 4: Loops
+  ...ch4WhileLoop,
+  ...ch4ForLoop,
+  ...ch4BreakContinue,
+  ...ch4NestedLoops,
+  ...ch4LoopPatterns,
+  ...ch4LoopsStrings,
+  ...ch4Practice,
+  ...ch34WriteProgramChallenges,
 ];
 
 export function shuffleArray<T>(arr: T[]): T[] {
