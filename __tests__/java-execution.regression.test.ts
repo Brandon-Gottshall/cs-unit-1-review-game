@@ -14,18 +14,44 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { execSync } from 'child_process';
-import { writeFileSync, mkdirSync, rmSync } from 'fs';
+import { execFileSync, execSync } from 'child_process';
+import { existsSync, writeFileSync, mkdirSync, rmSync } from 'fs';
 import path from 'path';
 import { unifiedQuestionPool } from '@/lib/cs-game-data';
 import { generators } from '@/lib/question-generators';
 
 const JAVA_TMP = path.join('/tmp', 'cs1301-java-tests');
+let JAVA_BIN = 'java';
+
+function resolveJavaBin(): string {
+  const javaHome = process.env.JAVA_HOME?.trim();
+  if (javaHome) {
+    const javaFromHome = path.join(javaHome, 'bin', 'java');
+    if (existsSync(javaFromHome)) {
+      return javaFromHome;
+    }
+  }
+
+  try {
+    const asdfJava = execSync('asdf which java', {
+      stdio: 'pipe',
+      encoding: 'utf-8',
+    }).trim();
+    if (asdfJava && existsSync(asdfJava)) {
+      return asdfJava;
+    }
+  } catch {
+    // Fall back to PATH lookup below.
+  }
+
+  return 'java';
+}
 
 // Verify java is available before all tests
 beforeAll(() => {
   try {
-    execSync('java --version', { stdio: 'pipe' });
+    JAVA_BIN = resolveJavaBin();
+    execFileSync(JAVA_BIN, ['--version'], { stdio: 'pipe' });
   } catch {
     throw new Error('java not found on PATH — these tests require JDK 11+');
   }
@@ -73,7 +99,7 @@ function runJava(source: string, id: string): { stdout: string; stderr: string; 
   writeFileSync(filePath, source);
 
   try {
-    const stdout = execSync(`java "${filePath}" 2>&1`, {
+    const stdout = execFileSync(JAVA_BIN, [filePath], {
       timeout: 10000,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],

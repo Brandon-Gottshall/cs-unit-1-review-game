@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import {
   Play,
@@ -18,6 +18,11 @@ import { unifiedQuestionPool } from '@/lib/cs-game-data';
 
 export default function HomePage() {
   const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Question type counts
   const vocabCount = unifiedQuestionPool.filter(q => q.type === 'vocabulary' || q.type === 'match_definition').length;
@@ -28,7 +33,7 @@ export default function HomePage() {
   const tfCount = unifiedQuestionPool.filter(q => q.type === 'true_false').length;
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative" data-testid="home-shell" data-hydrated={isHydrated ? 'true' : 'false'}>
       <CodeRain charCount={40} />
 
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
