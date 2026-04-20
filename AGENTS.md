@@ -1,6 +1,9 @@
 # CS Unit 1 Review Game Workflow Contract
 
-This repo treats `workflow-complete` as browser-verified, not just unit-tested.
+This repo follows the machine-wide WF default in `/Users/brandon/.codex/AGENTS.md`.
+
+- Repo-owned browser harnesses in this repo count as `Regression`.
+- `WF complete` still requires a low-context browser-agent pass for user-facing workflow changes.
 
 ## Validation
 
@@ -17,6 +20,8 @@ This repo treats `workflow-complete` as browser-verified, not just unit-tested.
 - Recovery/support-state flow: the feedback overlay must expose `Review Question`, and the `I have no idea` path must work on supported questions.
 - Persistence/restore flow: a saved `cs1301-session-v2` session plus `cs1301-variation-picker` state must reopen to the resume prompt and survive reload.
 - Calculator shell behavior: not present in this repo, so no calculator-specific browser case is required.
+
+These browser cases are required regression coverage, but they do not replace the machine-wide WF layer.
 
 ## Deterministic debug state
 

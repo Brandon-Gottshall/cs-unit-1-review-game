@@ -6,6 +6,7 @@
     "build:java": "node scripts/generate-snippet-outputs.mjs",
     "prebuild": "npm run build:java",
     "build": "next build",
+    "db:migrate": "node scripts/run-migrations.mjs",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
@@ -22,7 +23,8 @@
     "walkthrough": "npm run test:browser-harness:headed"
   },
   "dependencies": {
-    "@brandon-gottshall/review-game-core": "git+file:///Volumes/EmmaSSD/Development/Personal/VSU/review-games/review-game-core#v0.2.2",
+    "@brandon-gottshall/review-game-core": "file:../review-game-core",
+    "@neondatabase/serverless": "^1.1.0",
     "@radix-ui/react-progress": "1.1.1",
     "@radix-ui/react-slider": "1.2.2",
     "@radix-ui/react-slot": "1.1.1",
