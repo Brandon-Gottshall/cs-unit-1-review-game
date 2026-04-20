@@ -14,9 +14,9 @@ describe('parseQuizRouteState', () => {
   })
 
   it('reads focusConcept when present', () => {
-    expect(parse('focusConcept=computer-components').requestedFocusConceptId).toBe(
-      'computer-components',
-    )
+    const state = parse('atlasUserId=atlas-123&focusConcept=computer-components')
+    expect(state.requestedAtlasUserId).toBe('atlas-123')
+    expect(state.requestedFocusConceptId).toBe('computer-components')
   })
 
   it('turns on workflowDebug when wf=1 or a workflow question id is present', () => {

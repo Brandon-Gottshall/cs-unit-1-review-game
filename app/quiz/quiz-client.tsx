@@ -45,6 +45,7 @@ import {
   deserializePickerState,
   type VariationPickerState,
 } from "@/lib/variation-picker";
+import { useMasteryWriteback } from "@/lib/atlas-mastery-writeback";
 
 // Strip fenced code blocks from the question prompt so the code renders in
 // the dedicated code card below instead of as raw markdown in the heading.
@@ -621,24 +622,46 @@ function QuestionCard({ question, streak, onAnswer }: QuestionCardProps) {
 const HISTORY_STORAGE_KEY = 'cs1301-session-history';
 const PICKER_STORAGE_KEY = 'cs1301-variation-picker';
 
+function formatFocusConceptLabel(conceptId: string): string {
+  return conceptId
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 export default function QuizClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // Dev/test filter: ?type=trace_variables (comma-separated for multiple)
   const routeState = parseQuizRouteState(searchParams);
-  const { typeFilter, workflowQuestionId, workflowDebug: workflowDebugMode, requestedFocusConceptId } = routeState;
-  void requestedFocusConceptId; // Reserved for atlas-hub deep-links; concept filtering lands in a follow-up.
+  const {
+    typeFilter,
+    workflowQuestionId,
+    workflowDebug: workflowDebugMode,
+    requestedAtlasUserId,
+    requestedFocusConceptId,
+  } = routeState;
   const workflowQuestion = useMemo(() => {
     if (!workflowQuestionId) return null;
     return unifiedQuestionPool.find(q => q.id === workflowQuestionId) ?? null;
   }, [workflowQuestionId]);
+  const focusedPool = useMemo(() => {
+    if (!requestedFocusConceptId) return unifiedQuestionPool;
+    const focused = unifiedQuestionPool.filter((question) => question.concept === requestedFocusConceptId);
+    return focused.length > 0 ? focused : unifiedQuestionPool;
+  }, [requestedFocusConceptId]);
+  const activeFocusConceptId = useMemo(
+    () => (requestedFocusConceptId && focusedPool !== unifiedQuestionPool ? requestedFocusConceptId : null),
+    [focusedPool, requestedFocusConceptId],
+  );
+  const focusFallbackActive = Boolean(requestedFocusConceptId && !activeFocusConceptId);
   const filteredPool = useMemo(() => {
-    if (!typeFilter) return unifiedQuestionPool;
+    if (!typeFilter) return focusedPool;
     const types = new Set(typeFilter.split(','));
-    const filtered = unifiedQuestionPool.filter(q => types.has(q.type));
-    return filtered.length > 0 ? filtered : unifiedQuestionPool;
-  }, [typeFilter]);
+    const filtered = focusedPool.filter(q => types.has(q.type));
+    return filtered.length > 0 ? filtered : focusedPool;
+  }, [focusedPool, typeFilter]);
 
   const [initialized, setInitialized] = useState(false);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
@@ -654,6 +677,12 @@ export default function QuizClient() {
     detail?: string;
   } | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  useMasteryWriteback(
+    activeFocusConceptId,
+    requestedAtlasUserId,
+    feedback?.isCorrect === true,
+    'cs-unit-1',
+  );
 
   // History tracking
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -1000,6 +1029,23 @@ export default function QuizClient() {
       description={`${stats.graduated} / ${stats.total} concepts mastered`}
     >
       <div data-testid="wf-active-question" data-wf-question-id={currentQuestion?.id ?? ''} data-wf-question-type={currentQuestion?.type ?? ''}>
+        {requestedFocusConceptId && (
+          <div
+            className={`max-w-2xl mx-auto mb-2 px-3 py-2 rounded border text-sm flex items-center gap-2 ${
+              focusFallbackActive
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
+            }`}
+            data-testid="focus-banner"
+          >
+            <Code className="w-4 h-4" />
+            <span>Focused on: {formatFocusConceptLabel(requestedFocusConceptId)}</span>
+            {focusFallbackActive ? (
+              <span className="text-muted-foreground">— that concept is not playable here, so Atlas fell back to the nearest route.</span>
+            ) : null}
+          </div>
+        )}
+
         {/* Dev filter indicator */}
         {typeFilter && (
           <div className="max-w-2xl mx-auto mb-2 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono flex items-center gap-2">

@@ -4,6 +4,7 @@ export type QuizRouteState = {
   typeFilter: string | null
   workflowQuestionId: string | null
   workflowDebug: boolean
+  requestedAtlasUserId: string | null
   requestedFocusConceptId: string | null
 }
 
@@ -23,6 +24,7 @@ export const parseQuizRouteState = (
     workflowQuestionId,
     workflowDebug:
       readSearchParam(searchParams, 'wf') === '1' || Boolean(workflowQuestionId),
+    requestedAtlasUserId: readSearchParam(searchParams, 'atlasUserId'),
     requestedFocusConceptId: readSearchParam(searchParams, 'focusConcept'),
   }
 }
