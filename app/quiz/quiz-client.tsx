@@ -45,6 +45,15 @@ import {
   type VariationPickerState,
 } from "@/lib/variation-picker";
 
+// Strip fenced code blocks from the question prompt so the code renders in
+// the dedicated code card below instead of as raw markdown in the heading.
+function stripFencedCode(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/\n{2,}/g, '\n\n')
+    .trim();
+}
+
 // History entry type
 interface HistoryEntry {
   questionId: string;
@@ -415,7 +424,7 @@ function QuestionCard({ question, streak, onAnswer }: QuestionCardProps) {
 
         {/* Question */}
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold leading-relaxed">{question.question}</h2>
+          <h2 className="text-xl font-semibold leading-relaxed">{stripFencedCode(question.question)}</h2>
           {question.formula && (
             <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
               <code>{highlightLines(question.formula).map((line, i) => (
@@ -1043,7 +1052,7 @@ export default function QuizClient() {
                   </Badge>
                 </div>
 
-                <h2 className="text-xl font-semibold leading-relaxed">{currentQuestion.question}</h2>
+                <h2 className="text-xl font-semibold leading-relaxed">{stripFencedCode(currentQuestion.question)}</h2>
 
                 <JavaCodeEditor
                   initialCode={currentQuestion.formula || ''}
@@ -1213,7 +1222,7 @@ export default function QuizClient() {
                 </Button>
               </div>
 
-              <h2 className="text-xl font-semibold">{reviewQuestion.question}</h2>
+              <h2 className="text-xl font-semibold">{stripFencedCode(reviewQuestion.question)}</h2>
 
               {reviewQuestion.formula && (
                 <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
