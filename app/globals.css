@@ -1,7 +1,8 @@
 @import 'tailwindcss';
+@import '@brandon-gottshall/review-game-core/theme.css';
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is([data-theme="dark"] *));
 
 :root {
   /* Light mode - clean observatory white */
@@ -46,7 +47,7 @@
   --sidebar-ring: oklch(0.55 0.25 280);
 }
 
-.dark {
+[data-theme="dark"] {
   /* Deep space cosmic theme */
   --background: oklch(0.12 0.03 280);
   --foreground: oklch(0.92 0.01 270);

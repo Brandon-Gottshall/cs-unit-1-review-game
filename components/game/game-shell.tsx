@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ProfileControls from '@/components/profile-controls';
 
 interface GameShellProps {
   title: string;
@@ -44,6 +45,9 @@ export function GameShell({
               <p className="text-sm text-muted-foreground hidden sm:block">
                 {description}
               </p>
+            </div>
+            <div className="ml-auto shrink-0">
+              <ProfileControls showIdentity={false} />
             </div>
           </div>
         </div>

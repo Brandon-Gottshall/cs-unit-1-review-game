@@ -114,7 +114,7 @@ export function CodeOutputComparison({
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       {/* Question Prompt */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground">{questionPrompt}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{questionPrompt.replace(/```[\s\S]*?```/g, '').replace(/\n{2,}/g, '\n\n').trim()}</h3>
       </div>
 
       {/* Code Display */}

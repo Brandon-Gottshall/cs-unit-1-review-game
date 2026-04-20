@@ -2,3 +2,8 @@ node_modules
 .next
 .next-build
 .vercel
+
+# Local agent config + OS artifacts
+.claude/
+.DS_Store
+**/.DS_Store

@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS learners (
+  id TEXT PRIMARY KEY,
+  theme_preference JSONB,
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

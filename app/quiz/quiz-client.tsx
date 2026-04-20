@@ -45,6 +45,15 @@ import {
   type VariationPickerState,
 } from "@/lib/variation-picker";
 
+// Strip fenced code blocks from the question prompt so the code renders in
+// the dedicated code card below instead of as raw markdown in the heading.
+function stripFencedCode(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/\n{2,}/g, '\n\n')
+    .trim();
+}
+
 // History entry type
 interface HistoryEntry {
   questionId: string;
@@ -122,7 +131,7 @@ function HistoryPanel({
               {history.length} answered • <span className="text-green-400">{correctCount} ✓</span> • <span className="text-red-400">{incorrectCount} ✗</span> • <span className={accuracy >= 80 ? "text-green-400" : accuracy >= 60 ? "text-amber-400" : "text-foreground"}>{accuracy}% accuracy</span>
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close history panel">
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -415,7 +424,7 @@ function QuestionCard({ question, streak, onAnswer }: QuestionCardProps) {
 
         {/* Question */}
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold leading-relaxed">{question.question}</h2>
+          <h2 className="text-xl font-semibold leading-relaxed">{stripFencedCode(question.question)}</h2>
           {question.formula && (
             <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
               <code>{highlightLines(question.formula).map((line, i) => (
@@ -617,6 +626,12 @@ export default function QuizClient() {
 
   // Dev/test filter: ?type=trace_variables (comma-separated for multiple)
   const typeFilter = searchParams.get('type');
+  const workflowQuestionId = searchParams.get('question') ?? searchParams.get('wfQuestion');
+  const workflowDebugMode = searchParams.get('wf') === '1' || Boolean(workflowQuestionId);
+  const workflowQuestion = useMemo(() => {
+    if (!workflowQuestionId) return null;
+    return unifiedQuestionPool.find(q => q.id === workflowQuestionId) ?? null;
+  }, [workflowQuestionId]);
   const filteredPool = useMemo(() => {
     if (!typeFilter) return unifiedQuestionPool;
     const types = new Set(typeFilter.split(','));
@@ -695,6 +710,19 @@ export default function QuizClient() {
 
   // Initialize session on mount - check for saved progress
   useEffect(() => {
+    if (workflowQuestion) {
+      resetSession();
+      const picker = createVariationPicker();
+      setPickerState(picker);
+      getSession(conceptIds);
+      setCurrentConceptId(workflowQuestion.concept);
+      setCurrentQuestion(workflowQuestion);
+      setCurrentStreak(0);
+      setStats(getSessionStats());
+      setInitialized(true);
+      return;
+    }
+
     const hasSaved = loadSession();
 
     if (hasSaved) {
@@ -729,7 +757,7 @@ export default function QuizClient() {
     return () => {
       saveSessionIfNewer();
     };
-  }, [conceptIds, advanceToNext]);
+  }, [conceptIds, advanceToNext, workflowQuestion]);
 
   // Handle resuming or starting fresh
   const handleResumeSession = useCallback(() => {
@@ -869,7 +897,7 @@ export default function QuizClient() {
   if (!initialized) {
     return (
       <GameShell title="Loading..." description="Preparing questions">
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex items-center justify-center min-h-[60vh]" data-testid="wf-loading">
           <div className="animate-pulse text-muted-foreground">Loading...</div>
         </div>
       </GameShell>
@@ -881,7 +909,7 @@ export default function QuizClient() {
     const savedStats = getSessionStats();
     return (
       <GameShell title="Welcome Back!" description="Continue your study session">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8" data-testid="wf-resume-prompt">
           <div className="relative">
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
               <Clock className="w-16 h-16 text-white" />
@@ -928,7 +956,7 @@ export default function QuizClient() {
         title="Session Complete!"
         description="You've mastered all concepts"
       >
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8" data-testid="wf-session-complete">
           <div className="relative">
             <div className="w-40 h-40 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
               <Trophy className="w-20 h-20 text-white" />
@@ -970,106 +998,116 @@ export default function QuizClient() {
       title="Cram Session"
       description={`${stats.graduated} / ${stats.total} concepts mastered`}
     >
-      {/* Dev filter indicator */}
-      {typeFilter && (
-        <div className="max-w-2xl mx-auto mb-2 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono flex items-center gap-2">
-          <AlertTriangle className="w-3 h-3" />
-          Filter: {typeFilter} ({filteredPool.length} questions)
+      <div data-testid="wf-active-question" data-wf-question-id={currentQuestion?.id ?? ''} data-wf-question-type={currentQuestion?.type ?? ''}>
+        {/* Dev filter indicator */}
+        {typeFilter && (
+          <div className="max-w-2xl mx-auto mb-2 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono flex items-center gap-2">
+            <AlertTriangle className="w-3 h-3" />
+            Filter: {typeFilter} ({filteredPool.length} questions)
+          </div>
+        )}
+
+        {/* Progress bar */}
+        <div className="max-w-2xl mx-auto mb-6">
+          <Progress value={progressPercent} className="h-2" />
         </div>
-      )}
 
-      {/* Progress bar */}
-      <div className="max-w-2xl mx-auto mb-6">
-        <Progress value={progressPercent} className="h-2" />
-      </div>
-
-      <div className="py-4 pb-20">
-        {currentQuestion && currentQuestion.type === 'trace_variables' && currentQuestion.interactive?.variantData ? (
-          <VariableTraceViz
-            key={currentQuestion.id}
-            code={currentQuestion.interactive.variantData.code}
-            steps={currentQuestion.interactive.variantData.steps?.map((desc, idx) => ({
-              line: idx + 1,
-              statement: desc,
-              variables: {},
-            })) || []}
-            questionPrompt={currentQuestion.question}
-            correctAnswer={currentQuestion.correctAnswer}
-            distractors={currentQuestion.distractors}
-            onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
-          />
-        ) : currentQuestion && currentQuestion.type === 'predict_output' && currentQuestion.interactive?.outputData ? (
-          <CodeOutputComparison
-            key={currentQuestion.id}
-            code={currentQuestion.interactive.outputData.code}
-            expectedOutput={currentQuestion.interactive.outputData.expectedOutput}
-            questionPrompt={currentQuestion.question}
-            onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
-          />
-        ) : currentQuestion && (currentQuestion.type === 'identify_error' || (currentQuestion.type === 'complete_code' && !currentQuestion.distractors?.length)) && currentQuestion.formula ? (
-          <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur border-border/50">
-            <CardContent className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <Badge variant="outline" className={`gap-1.5 ${typeInfo[currentQuestion.type].color}`}>
-                  {typeInfo[currentQuestion.type].icon}
-                  {typeInfo[currentQuestion.type].label}
-                </Badge>
-                <Badge variant="outline" className="text-muted-foreground">
-                  {currentQuestion.section ? `§${currentQuestion.section}` : `Ch. ${currentQuestion.chapter}`}
-                </Badge>
-              </div>
-
-              <h2 className="text-xl font-semibold leading-relaxed">{currentQuestion.question}</h2>
-
-              <JavaCodeEditor
-                initialCode={currentQuestion.formula || ''}
-                readOnly={currentQuestion.type === 'identify_error'}
-                parseMode={/\bclass\s/.test(currentQuestion.formula || '') ? 'full' : 'statements'}
-                highlightLines={currentQuestion.interactive?.errorData?.errorLine ? [currentQuestion.interactive.errorData.errorLine] : []}
-                highlightColor={currentQuestion.type === 'identify_error' ? 'error' : 'warning'}
-                maxHeight="300px"
-                showErrors={false}
+        <div className="py-4 pb-20">
+          {currentQuestion && currentQuestion.type === 'trace_variables' && currentQuestion.interactive?.variantData ? (
+            <div data-wf-question-id={currentQuestion.id}>
+              <VariableTraceViz
+                key={currentQuestion.id}
+                code={currentQuestion.interactive.variantData.code}
+                steps={currentQuestion.interactive.variantData.steps?.map((desc, idx) => ({
+                  line: idx + 1,
+                  statement: desc,
+                  variables: {},
+                })) || []}
+                questionPrompt={currentQuestion.question}
+                correctAnswer={currentQuestion.correctAnswer}
+                distractors={currentQuestion.distractors}
+                onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
               />
-
-              {currentQuestion.keyFacts && (
-                <div className="pt-4 border-t border-border/50">
-                  <p className="text-xs text-muted-foreground mb-2">Key Facts:</p>
-                  <ul className="text-sm space-y-1">
-                    {currentQuestion.keyFacts.map((fact, idx) => (
-                      <li key={idx} className="text-muted-foreground">• {fact}</li>
-                    ))}
-                  </ul>
+            </div>
+          ) : currentQuestion && currentQuestion.type === 'predict_output' && currentQuestion.interactive?.outputData ? (
+            <div data-wf-question-id={currentQuestion.id}>
+              <CodeOutputComparison
+                key={currentQuestion.id}
+                code={currentQuestion.interactive.outputData.code}
+                expectedOutput={currentQuestion.interactive.outputData.expectedOutput}
+                questionPrompt={currentQuestion.question}
+                onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
+              />
+            </div>
+          ) : currentQuestion && (currentQuestion.type === 'identify_error' || (currentQuestion.type === 'complete_code' && !currentQuestion.distractors?.length)) && currentQuestion.formula ? (
+            <Card className="max-w-2xl mx-auto bg-card/50 backdrop-blur border-border/50" data-wf-question-id={currentQuestion.id}>
+              <CardContent className="p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className={`gap-1.5 ${typeInfo[currentQuestion.type].color}`}>
+                    {typeInfo[currentQuestion.type].icon}
+                    {typeInfo[currentQuestion.type].label}
+                  </Badge>
+                  <Badge variant="outline" className="text-muted-foreground">
+                    {currentQuestion.section ? `§${currentQuestion.section}` : `Ch. ${currentQuestion.chapter}`}
+                  </Badge>
                 </div>
-              )}
 
-              <CodeAnswerOptions
+                <h2 className="text-xl font-semibold leading-relaxed">{stripFencedCode(currentQuestion.question)}</h2>
+
+                <JavaCodeEditor
+                  initialCode={currentQuestion.formula || ''}
+                  readOnly={currentQuestion.type === 'identify_error'}
+                  parseMode={/\bclass\s/.test(currentQuestion.formula || '') ? 'full' : 'statements'}
+                  highlightLines={currentQuestion.interactive?.errorData?.errorLine ? [currentQuestion.interactive.errorData.errorLine] : []}
+                  highlightColor={currentQuestion.type === 'identify_error' ? 'error' : 'warning'}
+                  maxHeight="300px"
+                  showErrors={false}
+                />
+
+                {currentQuestion.keyFacts && (
+                  <div className="pt-4 border-t border-border/50">
+                    <p className="text-xs text-muted-foreground mb-2">Key Facts:</p>
+                    <ul className="text-sm space-y-1">
+                      {currentQuestion.keyFacts.map((fact, idx) => (
+                        <li key={idx} className="text-muted-foreground">• {fact}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <CodeAnswerOptions
+                  question={currentQuestion}
+                  onAnswer={handleAnswer}
+                />
+              </CardContent>
+            </Card>
+          ) : currentQuestion && currentQuestion.type === 'write_program' && currentQuestion.interactive?.programData ? (
+            <div data-wf-question-id={currentQuestion.id}>
+              <WriteProgramChallenge
+                key={currentQuestion.id}
+                filename={currentQuestion.interactive.programData.filename}
+                description={currentQuestion.question}
+                expectedOutput={currentQuestion.interactive.programData.expectedOutput}
+                sampleSolution={currentQuestion.interactive.programData.sampleSolution}
+                requiredElements={currentQuestion.interactive.programData.requiredElements}
+                hints={currentQuestion.interactive.programData.hints}
+                onAnswer={(isCorrect, penalty, studentCode, explanation) =>
+                  handleAnswer(isCorrect, explanation, penalty, studentCode)
+                }
+                onContinue={handleContinue}
+              />
+            </div>
+          ) : currentQuestion ? (
+            <div data-wf-question-id={currentQuestion.id}>
+              <QuestionCard
+                key={currentQuestion.id}
                 question={currentQuestion}
+                streak={currentStreak}
                 onAnswer={handleAnswer}
               />
-            </CardContent>
-          </Card>
-        ) : currentQuestion && currentQuestion.type === 'write_program' && currentQuestion.interactive?.programData ? (
-          <WriteProgramChallenge
-            key={currentQuestion.id}
-            filename={currentQuestion.interactive.programData.filename}
-            description={currentQuestion.question}
-            expectedOutput={currentQuestion.interactive.programData.expectedOutput}
-            sampleSolution={currentQuestion.interactive.programData.sampleSolution}
-            requiredElements={currentQuestion.interactive.programData.requiredElements}
-            hints={currentQuestion.interactive.programData.hints}
-            onAnswer={(isCorrect, penalty, studentCode, explanation) =>
-              handleAnswer(isCorrect, explanation, penalty, studentCode)
-            }
-            onContinue={handleContinue}
-          />
-        ) : currentQuestion ? (
-          <QuestionCard
-            key={currentQuestion.id}
-            question={currentQuestion}
-            streak={currentStreak}
-            onAnswer={handleAnswer}
-          />
-        ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* Bottom stats bar */}
@@ -1157,7 +1195,13 @@ export default function QuizClient() {
               className="absolute inset-0 bg-background/80 backdrop-blur-sm"
               onClick={handleCloseReview}
             />
-            <div className="relative max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto bg-card border border-border rounded-xl p-6 space-y-4">
+            <div
+              className="relative max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto bg-card border border-border rounded-xl p-6 space-y-4"
+              role="dialog"
+              aria-modal="true"
+              data-testid="wf-review-modal"
+              data-wf-question-id={reviewQuestion.id}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className={`gap-1.5 ${info.color}`}>
@@ -1173,12 +1217,12 @@ export default function QuizClient() {
                     </Badge>
                   )}
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleCloseReview}>
+                <Button variant="ghost" size="sm" onClick={handleCloseReview} aria-label="Close review question">
                   <X className="w-4 h-4" />
                 </Button>
               </div>
 
-              <h2 className="text-xl font-semibold">{reviewQuestion.question}</h2>
+              <h2 className="text-xl font-semibold">{stripFencedCode(reviewQuestion.question)}</h2>
 
               {reviewQuestion.formula && (
                 <pre className="text-sm font-mono bg-muted/50 px-3 py-2 rounded overflow-x-auto">
