@@ -1,6 +1,8 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
+import { buildGameMetadata } from '@brandon-gottshall/review-game-core'
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
+import { THEME_INIT_SCRIPT } from '@/lib/theme'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -18,10 +20,10 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono'
 });
 
-export const metadata: Metadata = {
-  title: 'Java Cram | CS 1301 Exam Prep',
-  description: 'Master intro Java concepts through spaced repetition. Prepare for CS 1301 with variable tracing, code prediction, and interactive exercises.',
-}
+export const metadata: Metadata = buildGameMetadata({
+  course: 'CS 1301',
+  subject: 'Introduction to Java',
+})
 
 export const viewport: Viewport = {
   themeColor: '#0a0a1a',
@@ -33,8 +35,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {children}
       </body>
     </html>

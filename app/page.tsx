@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import ProfileControls from '@/components/profile-controls';
 import { CodeRain } from '@/components/visualizations/code-rain';
 import { unifiedQuestionPool } from '@/lib/cs-game-data';
 
@@ -39,6 +40,9 @@ export default function HomePage() {
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         {/* Hero section */}
         <header className="text-center mb-12 animate-slide-up">
+          <div className="mb-3 flex justify-end">
+            <ProfileControls />
+          </div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
             <span>CS 1301K</span>
             <span className="w-1 h-1 rounded-full bg-primary" />

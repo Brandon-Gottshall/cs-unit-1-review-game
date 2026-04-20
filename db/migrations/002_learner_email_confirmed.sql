@@ -1,0 +1,2 @@
+ALTER TABLE learners
+ADD COLUMN IF NOT EXISTS email_confirmed boolean NOT NULL DEFAULT FALSE;
