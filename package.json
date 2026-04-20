@@ -23,7 +23,7 @@
     "walkthrough": "npm run test:browser-harness:headed"
   },
   "dependencies": {
-    "@brandon-gottshall/review-game-core": "file:../review-game-core",
+    "@brandon-gottshall/review-game-core": "git+https://github.com/Brandon-Gottshall/review-game-core.git#7109365c2d34d013f73cd409efb2652589337116",
     "@neondatabase/serverless": "^1.1.0",
     "@radix-ui/react-progress": "1.1.1",
     "@radix-ui/react-slider": "1.2.2",
