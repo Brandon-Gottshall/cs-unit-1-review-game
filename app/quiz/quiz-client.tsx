@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { parseQuizRouteState } from "@/lib/quiz-route";
 import { GameShell } from "@/components/game/game-shell";
 import { FeedbackOverlay } from "@/components/game/feedback-overlay";
 import { Button } from "@/components/ui/button";
@@ -625,9 +626,9 @@ export default function QuizClient() {
   const searchParams = useSearchParams();
 
   // Dev/test filter: ?type=trace_variables (comma-separated for multiple)
-  const typeFilter = searchParams.get('type');
-  const workflowQuestionId = searchParams.get('question') ?? searchParams.get('wfQuestion');
-  const workflowDebugMode = searchParams.get('wf') === '1' || Boolean(workflowQuestionId);
+  const routeState = parseQuizRouteState(searchParams);
+  const { typeFilter, workflowQuestionId, workflowDebug: workflowDebugMode, requestedFocusConceptId } = routeState;
+  void requestedFocusConceptId; // Reserved for atlas-hub deep-links; concept filtering lands in a follow-up.
   const workflowQuestion = useMemo(() => {
     if (!workflowQuestionId) return null;
     return unifiedQuestionPool.find(q => q.id === workflowQuestionId) ?? null;

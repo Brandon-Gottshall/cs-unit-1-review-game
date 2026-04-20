@@ -3,7 +3,7 @@ import path from 'path';
 
 export default defineConfig({
   test: {
-    include: ['__tests__/**/*.regression.test.ts'],
+    include: ['__tests__/**/*.regression.test.ts', 'lib/**/*.test.ts'],
     environment: 'node',
     testTimeout: 30000,
     hookTimeout: 30000,
