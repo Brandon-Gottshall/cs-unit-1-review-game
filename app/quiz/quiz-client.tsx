@@ -146,8 +146,9 @@ function HistoryPanel({
               {summary.completed} completed • <span className="text-green-400">{summary.firstTry} first try</span> • <span className="text-amber-400">{summary.withSupport} with support</span> • <span className="text-red-400">{summary.missed} missed</span>
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close history panel">
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close history panel" className="gap-1.5">
             <X className="w-4 h-4" />
+            Close
           </Button>
         </div>
 
@@ -1159,7 +1160,7 @@ export default function QuizClient() {
               className="gap-1.5 text-muted-foreground hover:text-foreground"
             >
               <MapIcon className="w-4 h-4" />
-              Map
+              Concept Map
             </Button>
             <Button
               variant="ghost"
@@ -1168,7 +1169,7 @@ export default function QuizClient() {
               className="gap-1.5 text-muted-foreground hover:text-foreground"
             >
               <Clock className="w-4 h-4" />
-              ({history.length})
+              History ({history.length})
             </Button>
             <span className={progressPercent >= 80 ? "text-green-400" : progressPercent >= 40 ? "text-amber-400" : "text-foreground"}>
               {Math.round(progressPercent)}% graduated

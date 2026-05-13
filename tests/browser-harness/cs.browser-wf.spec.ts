@@ -136,13 +136,13 @@ test('staged-answer flow and recovery path work on a routed question', async ({ 
   await expect(page.getByRole('heading', { name: 'Got it on the second try' })).toBeVisible();
 
   const feedback = page.getByTestId('quiz-feedback');
-  await feedback.getByRole('button', { name: 'Map' }).click();
+  await feedback.getByRole('button', { name: 'Open Concept Map' }).click();
   await expect(page.getByRole('heading', { name: 'Concept Map' })).toBeVisible();
   await page.getByRole('button', { name: 'Close concept map' }).click();
   await expect(page.getByRole('heading', { name: 'Got it on the second try' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
 
-  await feedback.getByRole('button', { name: /History/ }).click();
+  await feedback.getByRole('button', { name: /Open History/ }).click();
   await expect(page.getByRole('heading', { name: 'Question History' })).toBeVisible();
   await expect(page.getByText('with support')).toBeVisible();
   await page.getByRole('button', { name: 'Close history panel' }).click();
@@ -169,7 +169,7 @@ test('free-response output answers are preserved in history and progress copy', 
   await expect(feedback).toBeVisible();
   await expect(page.getByText('1 answer check completed', { exact: true })).toBeVisible();
 
-  await feedback.getByRole('button', { name: /History/ }).click();
+  await feedback.getByRole('button', { name: /Open History/ }).click();
   const historyPanel = page.getByTestId('question-history-panel');
   await expect(page.getByRole('heading', { name: 'Question History' })).toBeVisible();
   await expect(historyPanel).toContainText('Your answer: other');
