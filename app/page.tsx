@@ -32,6 +32,7 @@ export default function HomePage() {
   const errorCount = unifiedQuestionPool.filter(q => q.type === 'identify_error').length;
   const codeAnalysisCount = unifiedQuestionPool.filter(q => q.type === 'valid_invalid' || q.type === 'code_analysis').length;
   const tfCount = unifiedQuestionPool.filter(q => q.type === 'true_false').length;
+  const practiceConceptCount = new Set(unifiedQuestionPool.map(q => q.concept)).size;
 
   return (
     <div className="min-h-screen relative" data-testid="home-shell" data-hydrated={isHydrated ? 'true' : 'false'}>
@@ -54,7 +55,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-balance mb-8">
-            Master Java fundamentals through spaced repetition. Get every question right 3× in a row to graduate it.
+            Master Java fundamentals through spaced repetition. Graduate {practiceConceptCount} practice concepts across {unifiedQuestionPool.length} answer checks.
           </p>
 
           {/* Main CTA */}
@@ -66,7 +67,7 @@ export default function HomePage() {
             <Play className="w-5 h-5" />
             Start Cram Session
             <Badge variant="secondary" className="ml-2 bg-background/20">
-              {unifiedQuestionPool.length} Questions
+              {practiceConceptCount} Concepts
             </Badge>
           </Button>
         </header>
@@ -82,7 +83,7 @@ export default function HomePage() {
               Question Pool
             </CardTitle>
             <CardDescription>
-              {unifiedQuestionPool.length} questions across all categories
+              {unifiedQuestionPool.length} answer checks across {practiceConceptCount} practice concepts
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -170,10 +171,10 @@ export default function HomePage() {
             <CardTitle>How It Works</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>• Answer each question correctly <strong className="text-foreground">3 times in a row</strong> to master it</p>
+            <p>• Answer checks build streaks for each practice concept</p>
             <p>• Wrong answers reset your streak and the question comes back sooner</p>
             <p>• Questions you struggle with appear more frequently</p>
-            <p>• Session ends when all questions are mastered</p>
+            <p>• Session ends when all practice concepts graduate</p>
           </CardContent>
         </Card>
       </div>

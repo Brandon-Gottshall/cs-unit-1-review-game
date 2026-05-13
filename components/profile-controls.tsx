@@ -13,7 +13,6 @@ import {
   markIdentityFloatDismissed,
   persistThemePreferenceLocally,
   readBrowserThemePreference,
-  readIdentityFloatDismissed,
   readStoredEmailConfirmation,
   writeStoredEmailConfirmation,
 } from '@brandon-gottshall/review-game-core/ui'
@@ -46,12 +45,7 @@ export default function ProfileControls({ showIdentity = true }: ProfileControls
   const [identityMessage, setIdentityMessage] = useState<string | null>(null)
   const [themeMessage, setThemeMessage] = useState<string | null>(null)
   const [emailConfirmed, setEmailConfirmed] = useState(false)
-  const [openPanel, setOpenPanel] = useState<OpenPanel>(() => {
-    if (typeof window === 'undefined') return null
-    if (isEmailLearnerId(getLearnerId())) return null
-    if (readIdentityFloatDismissed()) return null
-    return 'identity'
-  })
+  const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
 
   useEffect(() => {
     let ignore = false

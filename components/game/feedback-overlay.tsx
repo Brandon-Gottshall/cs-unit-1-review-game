@@ -51,6 +51,7 @@ export function FeedbackOverlay({
           'animate-in zoom-in-95 duration-300',
           isCorrect ? 'border-success/50' : 'border-destructive/50'
         )}
+        data-testid="quiz-feedback"
       >
         {/* Icon */}
         <div
@@ -129,7 +130,7 @@ export function FeedbackOverlay({
                 className="gap-1.5 text-muted-foreground hover:text-foreground"
               >
                 <Map className="w-4 h-4" />
-                Map
+                Open Concept Map
               </Button>
             )}
             {onShowHistory && (
@@ -140,7 +141,7 @@ export function FeedbackOverlay({
                 className="gap-1.5 text-muted-foreground hover:text-foreground"
               >
                 <History className="w-4 h-4" />
-                History ({historyCount})
+                Open History ({historyCount})
               </Button>
             )}
           </div>
