@@ -222,12 +222,13 @@ export function SkillTreePage({
         <div>
           <h2 className="text-xl font-bold">Concept Map</h2>
           <p className="text-sm text-muted-foreground">
-            {masteredCount} / {totalConcepts} concepts mastered
+            {masteredCount} / {totalConcepts} concepts with evidence
           </p>
         </div>
         <button
           onClick={onClose}
           className="p-2 rounded-lg hover:bg-muted"
+          aria-label="Close concept map"
         >
           ✕
         </button>

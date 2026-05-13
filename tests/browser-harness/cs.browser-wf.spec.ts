@@ -133,6 +133,20 @@ test('staged-answer flow and recovery path work on a routed question', async ({ 
   await questionFrame.getByRole('button', { name: 'Submit Answer' }).click();
   await expect(page.getByRole('heading', { name: 'Got it on the second try' })).toBeVisible();
 
+  const feedback = page.getByTestId('quiz-feedback');
+  await feedback.getByRole('button', { name: 'Map' }).click();
+  await expect(page.getByRole('heading', { name: 'Concept Map' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close concept map' }).click();
+  await expect(page.getByRole('heading', { name: 'Got it on the second try' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+
+  await feedback.getByRole('button', { name: /History/ }).click();
+  await expect(page.getByRole('heading', { name: 'Question History' })).toBeVisible();
+  await expect(page.getByText('with support')).toBeVisible();
+  await page.getByRole('button', { name: 'Close history panel' }).click();
+  await expect(page.getByRole('heading', { name: 'Got it on the second try' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+
   await page.getByRole('button', { name: 'Review Question' }).click();
   const reviewModal = page.getByTestId('wf-review-modal');
   await expect(reviewModal).toBeVisible();
@@ -166,7 +180,8 @@ test('persistence and restore bring the learner back to the saved session', asyn
   await page.reload({ waitUntil: 'domcontentloaded' });
   const resumeState = page.getByTestId('wf-resume-prompt');
   await expect(resumeState).toBeVisible();
-  await expect(resumeState).toContainText('Questions answered: 1');
+  await expect(resumeState).toContainText('Completed questions: 1');
+  await expect(resumeState).toContainText('First-try answers: 100%');
 
   await page.getByRole('button', { name: 'Continue Session' }).click();
   await expect(page.locator(`[data-wf-question-id="${question.id}"]`).first()).toBeVisible();
@@ -179,5 +194,7 @@ test('persistence and restore bring the learner back to the saved session', asyn
   await page.getByRole('button', { name: 'Continue' }).click();
 
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect(page.getByTestId('wf-resume-prompt')).toContainText('Questions answered: 2');
+  const updatedResumeState = page.getByTestId('wf-resume-prompt');
+  await expect(updatedResumeState).toContainText('Completed questions: 2');
+  await expect(updatedResumeState).toContainText('First-try answers: 100%');
 });

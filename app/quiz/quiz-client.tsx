@@ -61,9 +61,19 @@ interface HistoryEntry {
   yourAnswer: string | null;
   correctAnswer: string;
   isCorrect: boolean;
+  penalty?: number;
   timestamp: number;
   type: CSQuestionType;
   chapter: number;
+}
+
+function summarizeHistory(history: HistoryEntry[]) {
+  const completed = history.length;
+  const firstTry = history.filter(entry => entry.isCorrect && (entry.penalty ?? 0) === 0).length;
+  const withSupport = history.filter(entry => entry.isCorrect && (entry.penalty ?? 0) > 0).length;
+  const missed = history.filter(entry => !entry.isCorrect).length;
+  const firstTryRate = completed > 0 ? Math.round((firstTry / completed) * 100) : 0;
+  return { completed, firstTry, withSupport, missed, firstTryRate };
 }
 
 // Question type metadata
@@ -106,9 +116,7 @@ function HistoryPanel({
 }) {
   if (!isOpen) return null;
 
-  const correctCount = history.filter(h => h.isCorrect).length;
-  const incorrectCount = history.length - correctCount;
-  const accuracy = history.length > 0 ? Math.round((correctCount / history.length) * 100) : 0;
+  const summary = summarizeHistory(history);
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -128,7 +136,7 @@ function HistoryPanel({
               Question History
             </h2>
             <p className="text-sm text-muted-foreground">
-              {history.length} answered • <span className="text-green-400">{correctCount} ✓</span> • <span className="text-red-400">{incorrectCount} ✗</span> • <span className={accuracy >= 80 ? "text-green-400" : accuracy >= 60 ? "text-amber-400" : "text-foreground"}>{accuracy}% accuracy</span>
+              {summary.completed} completed • <span className="text-green-400">{summary.firstTry} first try</span> • <span className="text-amber-400">{summary.withSupport} with support</span> • <span className="text-red-400">{summary.missed} missed</span>
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close history panel">
@@ -800,6 +808,7 @@ export default function QuizClient() {
         yourAnswer: selectedAnswer || null,
         correctAnswer: currentQuestion.correctAnswer,
         isCorrect,
+        penalty,
         timestamp: Date.now(),
         type: currentQuestion.type,
         chapter: currentQuestion.chapter,
@@ -907,6 +916,7 @@ export default function QuizClient() {
   // Resume prompt
   if (showResumePrompt) {
     const savedStats = getSessionStats();
+    const historySummary = summarizeHistory(history);
     return (
       <GameShell title="Welcome Back!" description="Continue your study session">
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8" data-testid="wf-resume-prompt">
@@ -919,9 +929,18 @@ export default function QuizClient() {
           <div className="text-center space-y-4 max-w-md">
             <h2 className="text-2xl font-bold">Previous Session Found</h2>
             <div className="text-muted-foreground space-y-1">
-              <p>Progress: {savedStats.graduated} of {savedStats.total} concepts mastered</p>
-              <p>Questions answered: {savedStats.questionsAnswered}</p>
-              <p>Accuracy: {savedStats.accuracy}%</p>
+              <p>Session progress: {savedStats.graduated} of {savedStats.total} practice concepts graduated</p>
+              {historySummary.completed > 0 ? (
+                <>
+                  <p>Completed questions: {historySummary.completed}</p>
+                  <p>First-try answers: {historySummary.firstTryRate}%</p>
+                  {historySummary.withSupport > 0 ? (
+                    <p>{historySummary.withSupport} completed with support</p>
+                  ) : null}
+                </>
+              ) : (
+                <p>Questions answered: {savedStats.questionsAnswered}</p>
+              )}
             </div>
           </div>
 
@@ -954,7 +973,7 @@ export default function QuizClient() {
     return (
       <GameShell
         title="Session Complete!"
-        description="You've mastered all concepts"
+        description="You've graduated all practice concepts"
       >
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8" data-testid="wf-session-complete">
           <div className="relative">
@@ -964,9 +983,9 @@ export default function QuizClient() {
           </div>
 
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold">All Concepts Mastered!</h2>
+            <h2 className="text-2xl font-bold">All Practice Concepts Graduated!</h2>
             <p className="text-muted-foreground">
-              You answered {stats.questionsAnswered} questions with {stats.accuracy}% accuracy
+              You completed {stats.questionsAnswered} answer checks across the session
             </p>
             {stats.struggling > 0 && (
               <p className="text-amber-400 text-sm flex items-center justify-center gap-1">
@@ -996,7 +1015,7 @@ export default function QuizClient() {
   return (
     <GameShell
       title="Cram Session"
-      description={`${stats.graduated} / ${stats.total} concepts mastered`}
+      description={`${stats.graduated} / ${stats.total} practice concepts graduated`}
     >
       <div data-testid="wf-active-question" data-wf-question-id={currentQuestion?.id ?? ''} data-wf-question-type={currentQuestion?.type ?? ''}>
         {/* Dev filter indicator */}
@@ -1115,7 +1134,7 @@ export default function QuizClient() {
         <div className="max-w-2xl mx-auto flex justify-between text-sm">
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">
-              <span className="font-bold text-primary">{stats.graduated}</span> / {stats.total} concepts
+              <span className="font-bold text-primary">{stats.graduated}</span> / {stats.total} graduated
             </span>
             <span className="text-muted-foreground">
               <span className="font-bold text-foreground">{stats.remaining}</span> remaining
@@ -1141,7 +1160,7 @@ export default function QuizClient() {
               ({history.length})
             </Button>
             <span className={progressPercent >= 80 ? "text-green-400" : progressPercent >= 40 ? "text-amber-400" : "text-foreground"}>
-              {Math.round(progressPercent)}% mastery
+              {Math.round(progressPercent)}% graduated
             </span>
           </div>
         </div>
@@ -1161,11 +1180,9 @@ export default function QuizClient() {
           }
         }}
         onShowHistory={() => {
-          setShowFeedback(false);
           setShowHistory(true);
         }}
         onShowSkillTree={() => {
-          setShowFeedback(false);
           setShowSkillTree(true);
         }}
         historyCount={history.length}

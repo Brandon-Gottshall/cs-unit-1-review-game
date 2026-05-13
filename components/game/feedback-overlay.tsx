@@ -51,6 +51,7 @@ export function FeedbackOverlay({
           'animate-in zoom-in-95 duration-300',
           isCorrect ? 'border-success/50' : 'border-destructive/50'
         )}
+        data-testid="quiz-feedback"
       >
         {/* Icon */}
         <div
