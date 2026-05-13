@@ -10,7 +10,7 @@ import { JavaCodeEditor } from '@/components/interactive/java-code-editor';
 export interface CodeOutputComparisonProps {
   code: string;
   expectedOutput: string;
-  onAnswer: (isCorrect: boolean, penalty: number) => void;
+  onAnswer: (isCorrect: boolean, penalty: number, selectedAnswer?: string) => void;
   questionPrompt?: string;
 }
 
@@ -100,7 +100,7 @@ export function CodeOutputComparison({
     const { result, penalty } = getMatchResult(userOutput, expectedOutput);
     setMatchResult(result);
     setSubmitted(true);
-    onAnswer(result === 'correct', penalty);
+    onAnswer(result === 'correct', penalty, userOutput);
   };
 
   // Clear hint when user edits their answer

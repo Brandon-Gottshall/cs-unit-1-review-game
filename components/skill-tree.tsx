@@ -209,8 +209,9 @@ export function SkillTreePage({
   onClose,
 }: SkillTreePageProps) {
   // Calculate overall stats
-  const totalConcepts = concepts.length;
-  const masteredCount = concepts.filter(c => {
+  const practiceConcepts = concepts.filter(concept => concept.questionIds.length > 0);
+  const totalConcepts = practiceConcepts.length;
+  const masteredCount = practiceConcepts.filter(c => {
     const mastery = getConceptMastery(c.id, c.questionIds, masteryData);
     return mastery >= MASTERY_THRESHOLD;
   }).length;
@@ -222,7 +223,7 @@ export function SkillTreePage({
         <div>
           <h2 className="text-xl font-bold">Concept Map</h2>
           <p className="text-sm text-muted-foreground">
-            {masteredCount} / {totalConcepts} concepts with evidence
+            {masteredCount} / {totalConcepts} practice concepts with evidence
           </p>
         </div>
         <button

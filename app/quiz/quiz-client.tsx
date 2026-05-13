@@ -76,6 +76,10 @@ function summarizeHistory(history: HistoryEntry[]) {
   return { completed, firstTry, withSupport, missed, firstTryRate };
 }
 
+function formatAnswerCheckCount(count: number) {
+  return `${count} answer ${count === 1 ? 'check' : 'checks'} completed`;
+}
+
 // Question type metadata
 const typeInfo: Record<CSQuestionType, { label: string; icon: React.ReactNode; color: string }> = {
   vocabulary: { label: "Vocabulary", icon: <BookOpen className="w-4 h-4" />, color: "bg-emerald-500/20 text-emerald-400" },
@@ -127,7 +131,10 @@ function HistoryPanel({
       />
 
       {/* Panel */}
-      <div className="relative ml-auto w-full max-w-md bg-card border-l border-border h-full overflow-hidden flex flex-col animate-in slide-in-from-right duration-300">
+      <div
+        className="relative ml-auto w-full max-w-md bg-card border-l border-border h-full overflow-hidden flex flex-col animate-in slide-in-from-right duration-300"
+        data-testid="question-history-panel"
+      >
         {/* Header */}
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div>
@@ -181,7 +188,7 @@ function HistoryPanel({
                         <p className="text-sm font-medium line-clamp-2">{entry.question}</p>
                         {!entry.isCorrect && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            <span className="text-red-400">Your answer:</span> {entry.yourAnswer || '(skipped)'}
+                            <span className="text-red-400">Your answer:</span> {entry.yourAnswer ?? '(answer recorded in activity)'}
                           </p>
                         )}
                         <p className="text-xs text-green-400 mt-0.5">
@@ -1011,11 +1018,12 @@ export default function QuizClient() {
   }
 
   const progressPercent = stats.total > 0 ? (stats.graduated / stats.total) * 100 : 0;
+  const historySummary = summarizeHistory(history);
 
   return (
     <GameShell
       title="Cram Session"
-      description={`${stats.graduated} / ${stats.total} practice concepts graduated`}
+      description={`${stats.graduated} / ${stats.total} practice concepts graduated · ${formatAnswerCheckCount(historySummary.completed)}`}
     >
       <div data-testid="wf-active-question" data-wf-question-id={currentQuestion?.id ?? ''} data-wf-question-type={currentQuestion?.type ?? ''}>
         {/* Dev filter indicator */}
@@ -1055,7 +1063,7 @@ export default function QuizClient() {
                 code={currentQuestion.interactive.outputData.code}
                 expectedOutput={currentQuestion.interactive.outputData.expectedOutput}
                 questionPrompt={currentQuestion.question}
-                onAnswer={(isCorrect, penalty) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty)}
+                onAnswer={(isCorrect, penalty, selectedAnswer) => handleAnswer(isCorrect, currentQuestion.correctAnswer, penalty, selectedAnswer)}
               />
             </div>
           ) : currentQuestion && (currentQuestion.type === 'identify_error' || (currentQuestion.type === 'complete_code' && !currentQuestion.distractors?.length)) && currentQuestion.formula ? (
@@ -1131,13 +1139,16 @@ export default function QuizClient() {
 
       {/* Bottom stats bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border py-3 px-4">
-        <div className="max-w-2xl mx-auto flex justify-between text-sm">
-          <div className="flex items-center gap-4">
+        <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="text-muted-foreground">
               <span className="font-bold text-primary">{stats.graduated}</span> / {stats.total} graduated
             </span>
             <span className="text-muted-foreground">
-              <span className="font-bold text-foreground">{stats.remaining}</span> remaining
+              <span className="font-bold text-foreground">{stats.remaining}</span> practice concepts remaining
+            </span>
+            <span className="text-muted-foreground">
+              <span className="font-bold text-foreground">{historySummary.completed}</span> answer {historySummary.completed === 1 ? 'check' : 'checks'} completed
             </span>
           </div>
           <div className="flex items-center gap-2">
